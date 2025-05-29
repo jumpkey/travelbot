@@ -1,0 +1,8 @@
+imaplib
+smtplib
+email
+pdfplumber>=0.9.0
+openai>=1.3.0
+icalendar>=5.0.0
+pyyaml>=6.0
+python-dateutil>=2.8.0
