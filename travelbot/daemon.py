@@ -345,14 +345,45 @@ class TravelBotDaemon:
         return False
     
     def search_for_unread_emails(self):
-        """Search for unread emails in the mailbox."""
+        """Search for unread emails in the mailbox with enhanced error handling."""
         try:
-            unread_uids = self.email_client.search_emails(['UNSEEN'])
-            if unread_uids:
-                self.log_with_timestamp(f"📬 Found {len(unread_uids)} unread email(s): {unread_uids}")
-            return unread_uids
+            search_result = self.email_client.search_emails(['UNSEEN'])
+            
+            # Handle new structured response format
+            if isinstance(search_result, dict):
+                if search_result['success']:
+                    unread_uids = search_result['uids']
+                    if unread_uids:
+                        self.log_with_timestamp(f"📬 Found {len(unread_uids)} unread email(s): {unread_uids}")
+                    else:
+                        self.log_with_timestamp("📭 No unread emails found")
+                    return unread_uids
+                else:
+                    # Search failed - this is the key improvement for distinguishing errors
+                    error_msg = search_result.get('error', 'Unknown search error')
+                    self.log_with_timestamp(f"✗ Email search failed: {error_msg}", "ERROR")
+                    
+                    # If it's a connection error, attempt reconnection
+                    if 'connection' in error_msg.lower() or 'eof' in error_msg.lower() or 'auth' in error_msg.lower():
+                        self.log_with_timestamp("🔌 Connection issue detected, attempting to reconnect...", "WARN")
+                        if self.connect_to_mailbox():
+                            self.log_with_timestamp("✓ Reconnection successful, retrying search...")
+                            # Retry search once after reconnection
+                            retry_result = self.email_client.search_emails(['UNSEEN'])
+                            if isinstance(retry_result, dict) and retry_result['success']:
+                                return retry_result['uids']
+                        self.log_with_timestamp("✗ Reconnection failed or retry unsuccessful", "ERROR")
+                    
+                    return []
+            else:
+                # Fallback for old format (shouldn't happen with new code)
+                self.log_with_timestamp("⚠️  Received old search format, converting...", "WARN")
+                return search_result if search_result else []
+                
         except Exception as e:
-            self.log_with_timestamp(f"✗ Error searching for emails: {e}", "ERROR")
+            self.log_with_timestamp(f"✗ Unexpected error during email search: {e}", "ERROR")
+            import traceback
+            traceback.print_exc()
             return []
     
     def build_comprehensive_travel_prompt(self, email_content):

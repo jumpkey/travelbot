@@ -39,6 +39,8 @@ class EmailClient:
 
             if response_status == 'OK':
                 print(f"Successfully logged in as {username} to {hostname}.")
+                # Store connection details for potential reconnection
+                self._last_connection_details = (hostname, username, password)
                 return self.mail
             else:
                 print(f"Login failed for {username}. Server response status: {response_status}, data: {decoded_response_data}")
@@ -67,10 +69,74 @@ class EmailClient:
             self.mail = None
             return None
 
-    def search_emails(self, criteria, charset='UTF-8'):
+    def validate_connection(self):
+        """Test if the IMAP connection is still alive and responsive."""
+        if not self.mail:
+            return False
+        try:
+            # Simple NOOP command to test connection
+            typ, data = self.mail.noop()
+            if typ == 'OK':
+                return True
+            else:
+                print(f"Connection validation failed: {typ} - {data}")
+                return False
+        except Exception as e:
+            print(f"Connection validation error: {e}")
+            return False
+
+    def search_emails(self, criteria, charset='UTF-8', max_retries=3):
+        """Enhanced search with connection recovery and retry logic."""
         if not self.mail:
             print("Not connected to IMAP server. Call connect_imap first.")
-            return []
+            return {'success': False, 'uids': [], 'error': 'Not connected'}
+        
+        # Store connection details for potential reconnection
+        if not hasattr(self, '_last_connection_details'):
+            print("Warning: No connection details stored for recovery")
+            return self._perform_search(criteria, charset)
+        
+        for attempt in range(max_retries):
+            try:
+                # Validate connection before searching
+                if not self.validate_connection():
+                    print(f"Connection invalid on attempt {attempt + 1}, attempting to reconnect...")
+                    if not self._reconnect():
+                        print(f"Reconnection failed on attempt {attempt + 1}")
+                        if attempt == max_retries - 1:
+                            return {'success': False, 'uids': [], 'error': 'Connection failed after retries'}
+                        continue
+                
+                # Perform the actual search
+                result = self._perform_search(criteria, charset)
+                if result['success']:
+                    return result
+                else:
+                    # If search failed but connection seems OK, it might be a server issue
+                    print(f"Search failed on attempt {attempt + 1}: {result['error']}")
+                    if attempt < max_retries - 1:
+                        import time
+                        wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+                        print(f"Retrying in {wait_time} seconds...")
+                        time.sleep(wait_time)
+                        continue
+                    return result
+                    
+            except Exception as e:
+                print(f"Search attempt {attempt + 1} failed with exception: {e}")
+                if attempt < max_retries - 1:
+                    import time
+                    wait_time = 2 ** attempt
+                    print(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return {'success': False, 'uids': [], 'error': f'All retry attempts failed: {str(e)}'}
+        
+        return {'success': False, 'uids': [], 'error': 'Maximum retries exceeded'}
+
+    def _perform_search(self, criteria, charset='UTF-8'):
+        """Perform the actual IMAP search operation."""
         try:
             print(f"Searching with criteria: {criteria} using charset: {charset}")
             typ, data = self.mail.uid('search', None, *criteria) 
@@ -79,23 +145,68 @@ class EmailClient:
                 uids_string = data[0].decode('utf-8') if isinstance(data[0], bytes) else data[0]
                 if uids_string: 
                     uids_list = uids_string.split(' ')
-                    print(f"Found {len(uids_list)} email(s) matching criteria: {uids_list}")
-                    return uids_list
+                    print(f"✓ Found {len(uids_list)} email(s) matching criteria: {uids_list}")
+                    return {'success': True, 'uids': uids_list, 'error': None}
                 else:
-                    print("No emails found matching criteria.")
-                    return []
+                    print("✓ Search successful - no emails found matching criteria")
+                    return {'success': True, 'uids': [], 'error': None}
             else:
                 error_detail = data[0].decode('utf-8') if isinstance(data[0], bytes) and data[0] else str(data)
-                print(f"IMAP search command failed: Response type {typ}, Data: {error_detail}")
-                return []
+                error_msg = f"IMAP search command failed: Response type {typ}, Data: {error_detail}"
+                print(f"✗ {error_msg}")
+                return {'success': False, 'uids': [], 'error': error_msg}
+                
         except imaplib.IMAP4.error as e:
-            print(f"IMAP error during search: {e}")
-            return []
+            error_msg = f"IMAP protocol error during search: {e}"
+            print(f"✗ {error_msg}")
+            return {'success': False, 'uids': [], 'error': error_msg}
         except Exception as e:
-            print(f"Unexpected error during search_emails: {e}")
+            error_msg = f"Unexpected error during search: {e}"
+            print(f"✗ {error_msg}")
             import traceback
-            traceback.print_exc() 
-            return []
+            traceback.print_exc()
+            return {'success': False, 'uids': [], 'error': error_msg}
+
+    def _reconnect(self):
+        """Attempt to reconnect using stored connection details."""
+        try:
+            if hasattr(self, '_last_connection_details'):
+                print("🔌 Attempting to reconnect to IMAP server...")
+                hostname, username, password = self._last_connection_details
+                
+                # Close existing connection if it exists
+                if self.mail:
+                    try:
+                        self.mail.close()
+                        self.mail.logout()
+                    except:
+                        pass
+                    self.mail = None
+                
+                # Attempt new connection
+                new_connection = self.connect_imap(hostname, username, password)
+                if new_connection:
+                    # CRITICAL: Select INBOX after reconnection
+                    try:
+                        typ, data = self.mail.select("INBOX")
+                        if typ == 'OK':
+                            print("✓ Successfully reconnected and selected INBOX")
+                            return True
+                        else:
+                            print(f"✗ Failed to select INBOX after reconnection: {data}")
+                            return False
+                    except Exception as select_e:
+                        print(f"✗ Error selecting INBOX after reconnection: {select_e}")
+                        return False
+                else:
+                    print("✗ Failed to reconnect to IMAP server")
+                    return False
+            else:
+                print("✗ No connection details available for reconnection")
+                return False
+        except Exception as e:
+            print(f"✗ Error during reconnection: {e}")
+            return False
 
     def search_unread_with_keywords(self, subject_keywords=None):
         if not self.mail:
@@ -109,7 +220,18 @@ class EmailClient:
                 criteria.append(keyword) 
         
         print(f"Constructed search criteria for unread with keywords: {criteria}")
-        return self.search_emails(criteria)
+        
+        # Handle new structured response format
+        search_result = self.search_emails(criteria)
+        if isinstance(search_result, dict):
+            if search_result['success']:
+                return search_result['uids']
+            else:
+                print(f"Search failed: {search_result['error']}")
+                return []
+        else:
+            # Fallback for old format (shouldn't happen)
+            return search_result if search_result else []
 
     def fetch_email_headers(self, email_uids):
         if not self.mail:
@@ -503,8 +625,18 @@ class EmailClient:
                 return False
             print(f"Mailbox {mailbox} selected.")
 
-            # search_emails already prints messages and returns a list of UIDs
-            all_uids = self.search_emails(['ALL']) 
+            # Handle new structured response format from search_emails
+            search_result = self.search_emails(['ALL'])
+            
+            if isinstance(search_result, dict):
+                if search_result['success']:
+                    all_uids = search_result['uids']
+                else:
+                    print(f"Search failed during reset: {search_result['error']}")
+                    return False
+            else:
+                # Fallback for old format (shouldn't happen)
+                all_uids = search_result if search_result else []
             
             if not all_uids: # Handles empty list from search_emails
                 print(f"No emails found in mailbox {mailbox} to reset.")
