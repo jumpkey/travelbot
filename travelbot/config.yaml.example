@@ -1,0 +1,75 @@
+# TravelBot v1.0 Configuration Template
+# Copy this file to config.yaml and fill in your actual credentials
+
+# OpenAI/LLM Configuration
+openai:
+  provider: "azure"  # Using Azure OpenAI
+  api_key: "your-azure-openai-api-key-here"   # Your Azure API key
+  model: "gpt-4o-e2"  # Your Azure deployment name
+  endpoint: "https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2024-02-15-preview"  # Your Azure endpoint
+  api_version: "2024-02-15-preview"     # Azure API version
+  deployment: "your-deployment-name"      # Your Azure deployment name
+
+# Email Configuration for sending calendar responses
+smtp:
+  host: "smtp.example.com"     # Your SMTP server
+  port: 587                    # STARTTLS port (587) or SSL port (465)
+  user: "travelbot@yourdomain.com"    # Your email account
+  password: "your-smtp-password"       # Your email password
+
+# Email Processing Configuration
+email:
+  # Email client type - "imap" or "pop3"
+  client_type: "imap"
+  
+  # IMAP settings for reading emails
+  imap:
+    host: "imap.example.com"    # Your IMAP server
+    port: 993                   # SSL port (993) or STARTTLS port (143)
+    username: "travelbot@yourdomain.com"  # Your email account
+    password: "your-imap-password"        # Your email password
+    # IDLE settings for real-time email processing
+    idle_enabled: true             # Enable IMAP IDLE for real-time processing
+    idle_timeout: 1740             # IDLE timeout in seconds (29 minutes)
+    idle_fallback_polling: 30      # Fallback polling interval if IDLE fails
+    connection_retry_delay: 5      # Delay between connection retries
+    max_connection_retries: 3      # Maximum connection retry attempts
+  
+  # POP3 settings for reading emails (alternative to IMAP)
+  pop3:
+    host: "pop.example.com"     # Your POP3 server
+    port: 995                   # SSL port (995) or plain port (110)
+    username: "travelbot@yourdomain.com"  # Your email account
+    password: "your-pop3-password"        # Your email password
+  
+  # Search criteria for travel emails
+  search:
+    keywords: ["itinerary", "confirmation", "travel", "booking"]
+    max_pdf_size_mb: 10
+
+# Processing settings
+processing:
+  download_folder: "attachments"
+  timezone: "America/New_York"  # System timezone for calendar events
+  # Default reply address for do-not-reply emails (airline systems, etc.)
+  default_reply_to: "user@yourdomain.com"
+
+# Configuration Notes:
+# 
+# Azure OpenAI Setup:
+# 1. Create an Azure OpenAI resource in Azure Portal
+# 2. Deploy a GPT-4o model (recommended) or GPT-4 model
+# 3. Get your API key from the Azure OpenAI resource
+# 4. Update the endpoint URL with your resource name and deployment
+#
+# Email Setup:
+# 1. Use an email account dedicated to TravelBot
+# 2. For Gmail: Use App Passwords instead of regular password
+# 3. For Outlook: May need to enable "Less secure app access"
+# 4. Test IMAP/SMTP connectivity before running the daemon
+#
+# Security:
+# 1. Keep this config file secure and never commit it to version control
+# 2. Use strong, unique passwords for email accounts
+# 3. Consider using environment variables for sensitive values
+# 4. Regularly rotate passwords and API keys

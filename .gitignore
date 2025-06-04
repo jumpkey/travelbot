@@ -1,0 +1,36 @@
+# TravelBot v1.0 .gitignore
+
+# Configuration files with sensitive data
+travelbot/config.yaml
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Work directories with potentially sensitive data
+work/attachments/*.pdf
+work/ics_files/*.ics
+
+# Log files
+*.log
+nohup.out
+
+# Environment files
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
