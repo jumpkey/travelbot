@@ -29,10 +29,11 @@ import re
 import json
 
 class TravelBotDaemon:
-    def __init__(self, config_path="config.yaml", poll_interval=30, retain_files=False):
+    def __init__(self, config_path="config.yaml", poll_interval=30, retain_files=False, verbose=False):
         self.config_path = config_path
         self.poll_interval = poll_interval
         self.retain_files = retain_files
+        self.verbose = verbose
         self.config = self.load_config()
         self.email_client = EmailClient()
         self.running = False
@@ -237,7 +238,8 @@ class TravelBotDaemon:
         try:
             while self.running:
                 try:
-                    self.log_with_timestamp("👂 Starting IDLE monitoring cycle...")
+                    if self.verbose:
+                        self.log_with_timestamp("👂 Starting IDLE monitoring cycle...")
                     
                     # Get IDLE configuration
                     imap_config = self.config['email']['imap']
@@ -254,7 +256,8 @@ class TravelBotDaemon:
                     idle_thread = self.email_client.start_idle_monitoring(
                         self.idle_client,
                         self.set_idle_notification_flag,
-                        timeout=actual_timeout
+                        timeout=actual_timeout,
+                        verbose=self.verbose
                     )
                     
                     # Wait for IDLE thread to complete or notification
@@ -356,7 +359,8 @@ class TravelBotDaemon:
                     if unread_uids:
                         self.log_with_timestamp(f"📬 Found {len(unread_uids)} unread email(s): {unread_uids}")
                     else:
-                        self.log_with_timestamp("📭 No unread emails found")
+                        if self.verbose:
+                            self.log_with_timestamp("📭 No unread emails found")
                     return unread_uids
                 else:
                     # Search failed - this is the key improvement for distinguishing errors
@@ -843,10 +847,12 @@ def main():
                        help='Email polling interval in seconds (default: 30)')
     parser.add_argument('--retain-files', action='store_true',
                        help='Retain work files (attachments and ICS files) after processing for debugging')
+    parser.add_argument('--verbose', action='store_true',
+                       help='Enable verbose logging (shows all IDLE monitoring details)')
     
     args = parser.parse_args()
     
-    daemon = TravelBotDaemon(poll_interval=args.poll_interval, retain_files=args.retain_files)
+    daemon = TravelBotDaemon(poll_interval=args.poll_interval, retain_files=args.retain_files, verbose=args.verbose)
     daemon.run_main_loop()
 
 if __name__ == '__main__':

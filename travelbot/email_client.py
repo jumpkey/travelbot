@@ -363,12 +363,13 @@ class EmailClient:
             print(f"Failed to setup IDLE connection: {e}")
             raise
 
-    def start_idle_monitoring(self, idle_client, callback, timeout=1740):
+    def start_idle_monitoring(self, idle_client, callback, timeout=1740, verbose=False):
         """Start IDLE monitoring with callback for new messages."""
         if not idle_client:
             raise Exception("No IDLE client provided")
             
-        print(f"Starting IDLE monitoring (timeout: {timeout}s)...")
+        if verbose:
+            print(f"Starting IDLE monitoring (timeout: {timeout}s)...")
         
         def idle_thread():
             notification_received = False
@@ -386,9 +387,14 @@ class EmailClient:
                         
                         # Process all responses
                         if responses:
-                            print(f"📨 Received {len(responses)} IDLE response(s)")
+                            if verbose:
+                                print(f"📨 Received {len(responses)} IDLE response(s)")
                             for response in responses:
-                                print(f"IDLE response: {response}")
+                                # Only log non-keepalive responses, or all if verbose
+                                response_str = str(response)
+                                is_keepalive = 'Still here' in response_str or 'OK' in response_str
+                                if verbose or not is_keepalive:
+                                    print(f"IDLE response: {response}")
                                 
                                 # Check for various message events
                                 response_bytes = response if isinstance(response, bytes) else str(response).encode()
@@ -411,7 +417,8 @@ class EmailClient:
                                         print(f"Error in IDLE callback: {cb_e}")
                         else:
                             # No responses - this is normal for IDLE
-                            print("👂 IDLE listening...")
+                            if verbose:
+                                print("👂 IDLE listening...")
                         
                         # Break out if we got a notification
                         if notification_received:
