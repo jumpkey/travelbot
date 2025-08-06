@@ -49,14 +49,14 @@ class TravelBotDaemon:
         os.makedirs(self.attachments_dir, exist_ok=True)
         os.makedirs(self.ics_dir, exist_ok=True)
         
-        print(f"🤖 TravelBot Daemon v1.0 Initialized")
-        print(f"📧 Monitoring: {self.config['email']['imap']['username']}")
-        print(f"⏱️  Poll interval: {poll_interval} seconds")
-        print(f"🎯 LLM Model: {self.config['openai']['model']}")
+        print(f"🤖 TravelBot Daemon v1.0 Initialized", flush=True)
+        print(f"📧 Monitoring: {self.config['email']['imap']['username']}", flush=True)
+        print(f"⏱️  Poll interval: {poll_interval} seconds", flush=True)
+        print(f"🎯 LLM Model: {self.config['openai']['model']}", flush=True)
         
         # Check IDLE capability
         self.check_server_capabilities()
-        print("=" * 80)
+        print("=" * 80, flush=True)
         
     def load_config(self):
         config_file = os.path.join(os.path.dirname(__file__), self.config_path)
@@ -64,9 +64,9 @@ class TravelBotDaemon:
             return yaml.safe_load(f)
     
     def log_with_timestamp(self, message, level="INFO"):
-        """Log message with timestamp."""
+        """Log message with timestamp and immediate flush."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{timestamp}] [{level}] {message}")
+        print(f"[{timestamp}] [{level}] {message}", flush=True)
     
     def check_server_capabilities(self):
         """Check server IDLE capability and configure accordingly."""
@@ -82,22 +82,22 @@ class TravelBotDaemon:
                 self.idle_enabled = idle_supported and idle_config_enabled
                 
                 if self.idle_enabled:
-                    print(f"⚡ IDLE Mode: ENABLED (Real-time email processing)")
-                    print(f"⏰ IDLE timeout: {imap_config.get('idle_timeout', 1740)}s")
+                    print(f"⚡ IDLE Mode: ENABLED (Real-time email processing)", flush=True)
+                    print(f"⏰ IDLE timeout: {imap_config.get('idle_timeout', 1740)}s", flush=True)
                 else:
                     if not idle_supported:
-                        print(f"📡 IDLE Mode: DISABLED (Server does not support IDLE)")
+                        print(f"📡 IDLE Mode: DISABLED (Server does not support IDLE)", flush=True)
                     elif not idle_config_enabled:
-                        print(f"📡 IDLE Mode: DISABLED (Disabled in configuration)")
-                    print(f"🔄 Falling back to polling mode")
+                        print(f"📡 IDLE Mode: DISABLED (Disabled in configuration)", flush=True)
+                    print(f"🔄 Falling back to polling mode", flush=True)
                 
                 temp_client.logout()
             else:
-                print(f"⚠️  Could not check IDLE capabilities - connection failed")
+                print(f"⚠️  Could not check IDLE capabilities - connection failed", flush=True)
                 self.idle_enabled = False
                 
         except Exception as e:
-            print(f"⚠️  Error checking server capabilities: {e}")
+            print(f"⚠️  Error checking server capabilities: {e}", flush=True)
             self.idle_enabled = False
 
     def setup_idle_mode(self):
