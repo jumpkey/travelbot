@@ -25,8 +25,10 @@ import requests
 import smtplib
 from email.message import EmailMessage
 from .email_client import EmailClient
+from .auto_reply_filter import should_skip_auto_reply, ReplyRateLimiter
 import re
 import json
+import email
 
 class TravelBotDaemon:
     def __init__(self, config_path="config.yaml", poll_interval=30, retain_files=False, verbose=False):
@@ -49,6 +51,9 @@ class TravelBotDaemon:
         self.ics_dir = os.path.join(self.work_dir, "ics_files")
         os.makedirs(self.attachments_dir, exist_ok=True)
         os.makedirs(self.ics_dir, exist_ok=True)
+        
+        # Rate limiter for reply loop prevention (max 3 replies per address per hour)
+        self.reply_rate_limiter = ReplyRateLimiter(max_replies=3, window_seconds=3600)
         
         print(f"🤖 TravelBot Daemon v1.0 Initialized", flush=True)
         print(f"📧 Monitoring: {self.config['email']['imap']['username']}", flush=True)
@@ -481,15 +486,29 @@ FORMAT REQUIREMENTS:
 - Keep hotel, car rental, and other services concise but complete
 - Use consistent timezone abbreviations (CT, ET, PT, MT, etc.)
 
+MESSAGE CLASSIFICATION (IMPORTANT - DO THIS FIRST):
+Before processing, classify this email into one of these categories:
+- "TRAVEL_ITINERARY": Contains travel bookings, reservations, or event information that should be processed
+- "AUTO_REPLY": Out-of-office reply, vacation auto-response, or automatic acknowledgment
+- "BOUNCE": Delivery failure notification, undeliverable mail, or system error message
+- "NON_TRAVEL": Regular email without travel/event information (but not an auto-reply or bounce)
+
+Signs of AUTO_REPLY: phrases like "I am out of the office", "automatic reply", "away from my desk", "on vacation until", "will respond when I return"
+Signs of BOUNCE: phrases like "delivery failed", "undeliverable", "mailbox full", "user unknown", "could not be delivered"
+
 OUTPUT FORMAT:
-Return ONLY a valid JSON object with exactly these two fields:
+Return ONLY a valid JSON object with these fields:
 
 {
-  "ics_content": "[Complete .ics file with VTIMEZONE definitions and all travel events]",
-  "email_summary": "[Professional travel digest with all services organized by category, using local timezones and emoji headers]"
+  "message_type": "TRAVEL_ITINERARY | AUTO_REPLY | BOUNCE | NON_TRAVEL",
+  "message_type_reason": "[Brief explanation of why you classified it this way]",
+  "ics_content": "[Complete .ics file with VTIMEZONE definitions and all travel events - empty VCALENDAR if not TRAVEL_ITINERARY]",
+  "email_summary": "[Professional travel digest OR brief explanation if not travel-related]"
 }
 
-If no travel information is found, return empty ics_content with VCALENDAR headers only and email_summary explaining no travel events were detected.
+If message_type is AUTO_REPLY or BOUNCE: set ics_content to empty VCALENDAR headers only, and email_summary should briefly explain why no processing was done.
+If message_type is NON_TRAVEL: still process any date/time/event information found (meetings, appointments, etc.) and generate appropriate ICS content.
+If message_type is TRAVEL_ITINERARY: process normally with full ICS and summary.
 """
         
         return prompt
@@ -536,6 +555,10 @@ If no travel information is found, return empty ics_content with VCALENDAR heade
             try:
                 parsed_response = json.loads(content)
                 if "ics_content" in parsed_response and "email_summary" in parsed_response:
+                    # Ensure message_type exists (default to TRAVEL_ITINERARY for backward compatibility)
+                    if "message_type" not in parsed_response:
+                        parsed_response["message_type"] = "TRAVEL_ITINERARY"
+                        parsed_response["message_type_reason"] = "No classification provided, assuming travel itinerary"
                     return parsed_response
                 else:
                     raise ValueError("Response missing required fields")
@@ -706,7 +729,7 @@ TravelBot Production Processing System
             return False, ics_filepath
 
     def process_single_email(self, email_uid):
-        """Process a single email with comprehensive travel detection."""
+        """Process a single email with comprehensive travel detection and loop prevention."""
         self.log_with_timestamp(f"🔄 Processing email UID {email_uid}")
         
         ics_filepath = None
@@ -723,12 +746,50 @@ TravelBot Production Processing System
             if email_content['pdf_text']:
                 self.log_with_timestamp(f"📎 PDF: {len(email_content['pdf_text'])} chars")
             
+            # === LAYER 1: Heuristic-based auto-reply detection (before LLM call) ===
+            # Fetch raw message to check headers
+            raw_msg = self._fetch_raw_message(email_uid)
+            if raw_msg:
+                smtp_user = self.config['smtp']['user']
+                skip, skip_reason = should_skip_auto_reply(raw_msg, email_content, smtp_user)
+                if skip:
+                    self.log_with_timestamp(f"🚫 Skipping auto-reply/bounce: {skip_reason}")
+                    # Mark as seen to prevent infinite retry, but don't send response
+                    self.email_client.mark_emails_as_seen([email_uid])
+                    self.log_with_timestamp(f"✅ Marked UID {email_uid} as seen (no reply sent)")
+                    return True
+            
+            # === LAYER 2: Rate limiting check ===
+            reply_to = self.determine_reply_address(email_content)
+            if reply_to:
+                can_send, rate_reason = self.reply_rate_limiter.can_send(reply_to)
+                if not can_send:
+                    self.log_with_timestamp(f"🚫 Rate limit exceeded for {reply_to}: {rate_reason}")
+                    # Mark as seen to prevent infinite retry
+                    self.email_client.mark_emails_as_seen([email_uid])
+                    self.log_with_timestamp(f"✅ Marked UID {email_uid} as seen (rate limited)")
+                    return True
+            
             # Build comprehensive travel prompt
             prompt = self.build_comprehensive_travel_prompt(email_content)
             self.log_with_timestamp(f"📝 Built prompt: {len(prompt)} characters")
             
             # Get structured response from LLM
             llm_response = self.get_comprehensive_response_from_llm(prompt)
+            
+            # === LAYER 3: LLM-based message classification ===
+            message_type = llm_response.get('message_type', 'TRAVEL_ITINERARY')
+            message_type_reason = llm_response.get('message_type_reason', '')
+            
+            self.log_with_timestamp(f"🏷️  LLM classified as: {message_type} ({message_type_reason})")
+            
+            # Skip sending response for auto-replies and bounces detected by LLM
+            if message_type in ('AUTO_REPLY', 'BOUNCE'):
+                self.log_with_timestamp(f"🚫 LLM detected {message_type}, skipping reply")
+                # Mark as seen to prevent infinite retry
+                self.email_client.mark_emails_as_seen([email_uid])
+                self.log_with_timestamp(f"✅ Marked UID {email_uid} as seen (LLM: {message_type})")
+                return True
             
             ics_content = llm_response['ics_content']
             email_summary = llm_response['email_summary']
@@ -740,6 +801,10 @@ TravelBot Production Processing System
             success, ics_filepath = self.send_comprehensive_response_email(email_content, ics_content, email_summary)
             
             if success:
+                # Record reply for rate limiting
+                if reply_to:
+                    self.reply_rate_limiter.record_reply(reply_to)
+                
                 # Mark original email as read
                 self.email_client.mark_emails_as_seen([email_uid])
                 
@@ -761,6 +826,20 @@ TravelBot Production Processing System
             if not self.retain_files and ics_filepath:
                 self.cleanup_work_files({}, ics_filepath)
             return False
+    
+    def _fetch_raw_message(self, email_uid):
+        """Fetch raw email message to access headers for auto-reply detection."""
+        try:
+            if not self.email_client.mail:
+                return None
+            typ, data = self.email_client.mail.uid('fetch', email_uid, '(RFC822)')
+            if typ != 'OK' or not data or not data[0]:
+                return None
+            raw_email_bytes = data[0][1]
+            return email.message_from_bytes(raw_email_bytes)
+        except Exception as e:
+            self.log_with_timestamp(f"⚠️  Could not fetch raw message for header check: {e}", "WARN")
+            return None
     
     def process_emails_batch(self, email_uids):
         """Process a batch of emails."""
