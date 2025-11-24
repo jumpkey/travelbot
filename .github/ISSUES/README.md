@@ -12,6 +12,7 @@ This directory contains documented issues and improvement opportunities for the 
 | [002](002-llm-call-no-timeout.md) | LLM call has no timeout | `daemon.py:518` | Open |
 | [003](003-fragile-json-parsing.md) | Fragile JSON parsing of LLM output | `daemon.py:527-544` | Open |
 | [004](004-smtp-no-timeout-retry.md) | SMTP send has no timeout or retry | `daemon.py:696-699` | Open |
+| [010](010-no-auto-reply-loop-protection.md) | No protection against auto-reply email loops | `daemon.py:550-596`, `email_client.py:715-776` | Open |
 
 ### High (Correctness/Reliability)
 
