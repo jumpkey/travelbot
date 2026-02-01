@@ -835,7 +835,13 @@ TravelBot Production Processing System
             typ, data = self.email_client.mail.uid('fetch', email_uid, '(RFC822)')
             if typ != 'OK' or not data or not data[0]:
                 return None
+            # Validate IMAP response structure before accessing
+            if not isinstance(data[0], tuple) or len(data[0]) < 2:
+                self.log_with_timestamp(f"⚠️  Unexpected IMAP response structure for UID {email_uid}", "WARN")
+                return None
             raw_email_bytes = data[0][1]
+            if not raw_email_bytes:
+                return None
             return email.message_from_bytes(raw_email_bytes)
         except Exception as e:
             self.log_with_timestamp(f"⚠️  Could not fetch raw message for header check: {e}", "WARN")
