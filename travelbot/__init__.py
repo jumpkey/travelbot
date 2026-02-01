@@ -23,7 +23,7 @@ Or via command line:
 
 __version__ = "1.0.0"
 __author__ = "TravelBot Development Team"
-__email__ = "travelbot@jumpkey.com"
+__email__ = "travelbot@example.com"
 
 from .email_client import EmailClient
 from .pdf_processor import extract_text_from_pdf

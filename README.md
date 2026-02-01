@@ -177,7 +177,7 @@ Example: Boston flight departing 8:00 AM Eastern shows as "7:00 AM" in Central t
 ## 📞 Support
 
 For support and questions:
-- Email: travelbot@jumpkey.com
+- Email: travelbot@example.com
 - Documentation: [docs/](docs/)
 - Issues: Use the project issue tracker
 
