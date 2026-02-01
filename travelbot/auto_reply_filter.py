@@ -7,8 +7,8 @@ This module provides heuristic-based detection of auto-generated emails
 RFC 3834 defines standard headers for automatic responses.
 """
 
-import re
 from email.message import Message
+from email.utils import parseaddr
 from typing import Tuple, Optional, Dict, Any
 
 
@@ -69,8 +69,12 @@ def should_skip_auto_reply(
             return True, f"Bounce sender pattern: {pattern}"
     
     # 7. Check for self-loop (replying to our own address)
-    if smtp_user and from_addr == smtp_user.lower():
-        return True, "Self-loop detected (from own address)"
+    # Parse the actual email address from the From header (which may include display name)
+    if smtp_user:
+        _, parsed_from = parseaddr(email_content.get('from', ''))
+        _, parsed_smtp = parseaddr(smtp_user)
+        if parsed_from.lower() == parsed_smtp.lower():
+            return True, "Self-loop detected (from own address)"
     
     # 8. Check for common auto-reply subject patterns
     subject = email_content.get('subject', '').lower()
@@ -103,8 +107,7 @@ def should_skip_auto_reply(
 
 def get_message_type_from_headers(
     msg: Message,
-    email_content: Dict[str, Any],
-    smtp_user: str
+    email_content: Dict[str, Any]
 ) -> Tuple[str, Optional[str]]:
     """
     Classify message type based on headers (before LLM call).

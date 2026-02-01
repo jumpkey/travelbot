@@ -5,7 +5,6 @@ These tests verify that TravelBot correctly identifies auto-generated emails
 (OOO replies, bounces, mailing lists) to prevent email loops.
 """
 
-import pytest
 from email.message import EmailMessage
 from travelbot.auto_reply_filter import (
     should_skip_auto_reply,
@@ -275,7 +274,7 @@ class TestGetMessageTypeFromHeaders:
         })
         email_content = make_email_content("user@example.com", "Flight confirmation")
         
-        msg_type, reason = get_message_type_from_headers(msg, email_content, "travelbot@example.com")
+        msg_type, reason = get_message_type_from_headers(msg, email_content)
         
         assert msg_type == "NORMAL"
 
@@ -288,7 +287,7 @@ class TestGetMessageTypeFromHeaders:
         })
         email_content = make_email_content("user@example.com", "Re: Your message")
         
-        msg_type, reason = get_message_type_from_headers(msg, email_content, "travelbot@example.com")
+        msg_type, reason = get_message_type_from_headers(msg, email_content)
         
         assert msg_type == "AUTO_REPLY"
 
@@ -301,7 +300,7 @@ class TestGetMessageTypeFromHeaders:
         })
         email_content = make_email_content("MAILER-DAEMON@example.com", "Delivery Status Notification")
         
-        msg_type, reason = get_message_type_from_headers(msg, email_content, "travelbot@example.com")
+        msg_type, reason = get_message_type_from_headers(msg, email_content)
         
         assert msg_type == "BOUNCE"
 
@@ -314,7 +313,7 @@ class TestGetMessageTypeFromHeaders:
         })
         email_content = make_email_content("user@example.com", "Discussion")
         
-        msg_type, reason = get_message_type_from_headers(msg, email_content, "travelbot@example.com")
+        msg_type, reason = get_message_type_from_headers(msg, email_content)
         
         assert msg_type == "MAILING_LIST"
 
