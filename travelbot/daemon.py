@@ -2,7 +2,7 @@
 """
 TravelBot Production Email Processing Daemon
 
-This daemon continuously monitors the travelbot@jumpkey.com mailbox for new travel emails,
+This daemon continuously monitors the configured mailbox for new travel emails,
 processes them with comprehensive travel service detection, and sends back personalized
 calendar responses with timezone intelligence.
 
