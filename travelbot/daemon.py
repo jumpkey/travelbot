@@ -740,9 +740,16 @@ If message_type is TRAVEL_ITINERARY: process normally with full ICS and summary.
             
         files_to_cleanup = []
         
-        # Add PDF attachment if exists
-        if email_content.get('pdf_filepath') and os.path.exists(email_content['pdf_filepath']):
-            files_to_cleanup.append(email_content['pdf_filepath'])
+        # Add all PDF attachments if they exist (Issue 007 - multiple PDFs)
+        pdf_filepaths = email_content.get('pdf_filepaths', [])
+        for pdf_path in pdf_filepaths:
+            if pdf_path and os.path.exists(pdf_path):
+                files_to_cleanup.append(pdf_path)
+        
+        # Backward compatibility: also check single pdf_filepath
+        single_pdf = email_content.get('pdf_filepath')
+        if single_pdf and single_pdf not in files_to_cleanup and os.path.exists(single_pdf):
+            files_to_cleanup.append(single_pdf)
             
         # Add ICS file if exists
         if ics_filepath and os.path.exists(ics_filepath):

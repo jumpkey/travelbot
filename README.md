@@ -192,6 +192,10 @@ The following reliability and correctness issues have been addressed:
 | #003 | Fragile JSON parsing of LLM output | Robust JSON extraction handling various markdown fence styles |
 | #004 | SMTP send has no timeout or retry | Added 30s timeout with exponential backoff retry for transient errors |
 | #005 | ICS content never validated | Validation using icalendar library; graceful fallback if invalid |
+| #006 | max_pdf_size_mb config not enforced | PDF size check before saving; skip oversized PDFs with logging |
+| #007 | Only first PDF attachment processed | Process all PDF attachments; combine extracted text with separators |
+| #008 | Email body duplicated from plain+HTML | Prefer HTML content; fall back to plain text; avoid duplication |
+| #009 | RFC2047 headers not decoded | Decode Subject/From/To headers using email.header.decode_header() |
 | #010 | No auto-reply loop protection | RFC 3834 compliant detection, rate limiting, self-loop prevention |
 
 See [.github/ISSUES/](.github/ISSUES/) for detailed issue documentation.
