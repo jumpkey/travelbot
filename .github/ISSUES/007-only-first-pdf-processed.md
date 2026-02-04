@@ -2,8 +2,15 @@
 
 **Priority:** Medium  
 **Category:** Correctness  
-**Status:** Open  
-**Location:** `travelbot/email_client.py:582`
+**Status:** Fixed (PR #14)  
+**Location:** `EmailClient.download_pdf_attachments`, `EmailClient.get_complete_email_content`
+
+## Fix Applied
+- Modified `download_pdf_attachments()` to process all PDF attachments (removed MVP break)
+- Returns list of filepaths instead of single path
+- Updated `get_complete_email_content()` to handle multiple PDFs
+- Combined extracted text from all PDFs with separators
+- Updated `cleanup_work_files()` in daemon.py to clean up all PDF files
 
 ## Problem
 

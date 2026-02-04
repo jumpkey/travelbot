@@ -19,15 +19,15 @@ This directory contains documented issues and improvement opportunities for the 
 | ID | Title | Location | Status |
 |----|-------|----------|--------|
 | [005](005-ics-content-not-validated.md) | ICS content never validated | `TravelBotDaemon._validate_ics_content` | Fixed (PR #13) |
-| [006](006-max-pdf-size-not-enforced.md) | max_pdf_size_mb config not enforced | `email_client.py`, `pdf_processor.py` | Open |
+| [006](006-max-pdf-size-not-enforced.md) | max_pdf_size_mb config not enforced | `EmailClient.download_pdf_attachments` | Fixed (PR #14) |
 
 ### Medium (Correctness/Efficiency)
 
 | ID | Title | Location | Status |
 |----|-------|----------|--------|
-| [007](007-only-first-pdf-processed.md) | Only first PDF attachment processed | `email_client.py:582` | Open |
-| [008](008-email-body-duplicated.md) | Email body duplicated from plain+HTML | `email_client.py:679-695` | Open |
-| [009](009-rfc2047-headers-not-decoded.md) | RFC2047 headers not decoded | `email_client.py:739-740` | Open |
+| [007](007-only-first-pdf-processed.md) | Only first PDF attachment processed | `EmailClient.download_pdf_attachments` | Fixed (PR #14) |
+| [008](008-email-body-duplicated.md) | Email body duplicated from plain+HTML | `EmailClient.extract_email_body` | Fixed (PR #14) |
+| [009](009-rfc2047-headers-not-decoded.md) | RFC2047 headers not decoded | `EmailClient._decode_email_header` | Fixed (PR #14) |
 
 ## Workflow
 

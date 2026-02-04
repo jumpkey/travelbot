@@ -2,6 +2,7 @@ import imaplib
 import ssl
 import os
 import email # For parsing email messages
+from email.header import decode_header  # For RFC2047 decoding (Issue 009)
 import time # For generating unique filenames
 import uuid
 import threading
@@ -21,6 +22,32 @@ class EmailClient:
         Initializes the EmailClient.
         """
         self.mail = None # To store the IMAP connection object
+
+    def _decode_email_header(self, header_value):
+        """Decode RFC2047 encoded email headers (Issue 009).
+        
+        Handles encoded headers like =?UTF-8?B?...?= for international characters.
+        
+        Args:
+            header_value: Raw header value from email message
+            
+        Returns:
+            str: Decoded header string, or empty string if header is None
+        """
+        if not header_value:
+            return ''
+        try:
+            decoded_parts = decode_header(header_value)
+            result = []
+            for part, charset in decoded_parts:
+                if isinstance(part, bytes):
+                    result.append(part.decode(charset or 'utf-8', errors='replace'))
+                else:
+                    result.append(part)
+            return ''.join(result)
+        except Exception as e:
+            print(f"Warning: Could not decode header '{header_value[:50]}...': {e}")
+            return str(header_value)
 
     def connect_imap(self, hostname, username, password):
         """
@@ -519,10 +546,20 @@ class EmailClient:
             
         return test_filename
 
-    def download_pdf_attachments(self, email_uid, download_folder="work/attachments"):
+    def download_pdf_attachments(self, email_uid, download_folder="work/attachments", max_pdf_size_mb=10):
+        """Download all PDF attachments from an email (Issues 006, 007).
+        
+        Args:
+            email_uid: Email UID to fetch attachments from
+            download_folder: Folder to save PDFs to
+            max_pdf_size_mb: Maximum PDF size in MB (default 10MB, Issue 006)
+            
+        Returns:
+            list: List of saved PDF filepaths, or empty list if none found
+        """
         if not self.mail:
             print("Not connected. Call connect_imap first.")
-            return None
+            return []
 
         try:
             print(f"Attempting to fetch email UID {email_uid} for PDF attachments...")
@@ -530,19 +567,20 @@ class EmailClient:
             if typ != 'OK':
                 error_detail = data[0].decode('utf-8') if isinstance(data[0], bytes) and data[0] else str(data)
                 print(f"Failed to fetch email UID {email_uid}. Server response: {typ} - {error_detail}")
-                return None
+                return []
 
             # Ensure data[0] is a tuple and has at least two elements, data[0][1] being the email body
             if not (isinstance(data, list) and len(data) > 0 and isinstance(data[0], tuple) and len(data[0]) == 2):
                 print(f"Unexpected data structure for RFC822 fetch of UID {email_uid}: {data}")
-                return None
+                return []
                 
             raw_email_bytes = data[0][1]
             msg = email.message_from_bytes(raw_email_bytes)
 
             os.makedirs(download_folder, exist_ok=True)
             
-            saved_filepath = None # To store the path of the first saved PDF
+            saved_filepaths = []  # Changed to list for multiple PDFs (Issue 007)
+            max_size_bytes = max_pdf_size_mb * 1024 * 1024  # Convert MB to bytes (Issue 006)
 
             for part in msg.walk():
                 content_type = part.get_content_type()
@@ -570,16 +608,21 @@ class EmailClient:
                     filepath = os.path.join(download_folder, unique_filename)
                     
                     print(f"Found PDF attachment: '{filename}', Content-Type: {content_type}")
-                    print(f"Attempting to save to: {filepath}")
 
                     try:
                         payload = part.get_payload(decode=True) 
                         if payload:
+                            # Check file size before saving (Issue 006)
+                            file_size = len(payload)
+                            if file_size > max_size_bytes:
+                                print(f"Skipping PDF '{filename}': {file_size / (1024*1024):.2f}MB exceeds limit of {max_pdf_size_mb}MB")
+                                continue
+                            
+                            print(f"Attempting to save to: {filepath} ({file_size / 1024:.1f}KB)")
                             with open(filepath, 'wb') as f:
                                 f.write(payload)
                             print(f"Successfully saved PDF attachment to {filepath}")
-                            saved_filepath = filepath # Store path of first successfully saved PDF
-                            break # MVP: Download first PDF attachment found and then stop
+                            saved_filepaths.append(filepath)  # Add to list instead of breaking (Issue 007)
                         else:
                             print(f"Could not decode payload for attachment '{filename}'. Skipping.")
                             
@@ -587,20 +630,21 @@ class EmailClient:
                         print(f"Error saving attachment '{filename}': {e_save}")
                         # Continue to look for other PDF attachments if this one fails to save
             
-            if saved_filepath:
-                return saved_filepath # Return path of the first PDF successfully saved
+            if saved_filepaths:
+                print(f"Downloaded {len(saved_filepaths)} PDF attachment(s) for email UID {email_uid}")
+                return saved_filepaths
             else:
                 print(f"No PDF attachments found (or successfully saved) for email UID {email_uid}.")
-                return None
+                return []
 
         except imaplib.IMAP4.error as e:
             print(f"IMAP error downloading attachments for UID {email_uid}: {e}")
-            return None
+            return []
         except Exception as e_main:
             print(f"An unexpected error occurred downloading attachments for UID {email_uid}: {e_main}")
             import traceback
             traceback.print_exc()
-            return None
+            return []
 
     def logout(self): 
         if self.mail:
@@ -663,8 +707,13 @@ class EmailClient:
             return False
 
     def extract_email_body(self, msg):
-        """Extract email body text from email message, handling both HTML and plain text."""
-        body_text = ""
+        """Extract email body text from email message (Issue 008).
+        
+        Prefers HTML content when available (richer formatting for travel details),
+        falls back to plain text. Only extracts one version to avoid duplication.
+        """
+        html_text = None
+        plain_text = None
         
         # If email is multipart, extract text from parts
         if msg.is_multipart():
@@ -676,21 +725,19 @@ class EmailClient:
                 if "attachment" in content_disposition:
                     continue
                     
-                if content_type == "text/plain":
+                if content_type == "text/plain" and plain_text is None:
                     charset = part.get_content_charset() or 'utf-8'
                     try:
-                        text = part.get_payload(decode=True).decode(charset, errors='replace')
-                        body_text += text + "\n\n"
+                        plain_text = part.get_payload(decode=True).decode(charset, errors='replace')
                     except Exception as e:
                         print(f"Error decoding plain text part: {e}")
                         
-                elif content_type == "text/html":
+                elif content_type == "text/html" and html_text is None:
                     charset = part.get_content_charset() or 'utf-8'
                     try:
                         html = part.get_payload(decode=True).decode(charset, errors='replace')
                         # Convert HTML to text
-                        text = html2text(html)
-                        body_text += text + "\n\n"
+                        html_text = html2text(html)
                     except Exception as e:
                         print(f"Error decoding HTML part: {e}")
         else:
@@ -700,20 +747,28 @@ class EmailClient:
             
             try:
                 if content_type == "text/plain":
-                    body_text = msg.get_payload(decode=True).decode(charset, errors='replace')
+                    plain_text = msg.get_payload(decode=True).decode(charset, errors='replace')
                 elif content_type == "text/html":
                     html = msg.get_payload(decode=True).decode(charset, errors='replace')
-                    body_text = html2text(html)
+                    html_text = html2text(html)
                 else:
-                    body_text = str(msg.get_payload())
+                    plain_text = str(msg.get_payload())
             except Exception as e:
                 print(f"Error decoding email body: {e}")
-                body_text = str(msg.get_payload())
+                plain_text = str(msg.get_payload())
         
+        # Prefer HTML (richer formatting for travel details), fall back to plain text
+        body_text = html_text if html_text else (plain_text or "")
         return body_text.strip()
 
-    def get_complete_email_content(self, email_uid, download_folder="attachments"):
-        """Extract complete email content: headers, body, and PDF attachment text."""
+    def get_complete_email_content(self, email_uid, download_folder="attachments", max_pdf_size_mb=10):
+        """Extract complete email content: headers, body, and PDF attachment text.
+        
+        Args:
+            email_uid: Email UID to fetch
+            download_folder: Folder to save PDF attachments
+            max_pdf_size_mb: Maximum PDF size in MB (default 10MB, Issue 006)
+        """
         if not self.mail:
             print("Not connected. Call connect_imap first.")
             return None
@@ -733,32 +788,47 @@ class EmailClient:
             raw_email_bytes = data[0][1]
             msg = email.message_from_bytes(raw_email_bytes)
 
-            # Extract email metadata
+            # Extract email metadata with RFC2047 decoding (Issue 009)
             email_content = {
                 'uid': email_uid,
-                'subject': msg.get('Subject', 'No Subject'),
-                'from': msg.get('From', 'Unknown Sender'),
-                'to': msg.get('To', ''),
+                'subject': self._decode_email_header(msg.get('Subject')) or 'No Subject',
+                'from': self._decode_email_header(msg.get('From')) or 'Unknown Sender',
+                'to': self._decode_email_header(msg.get('To')) or '',
                 'date': msg.get('Date', ''),
                 'body_text': self.extract_email_body(msg),
                 'pdf_text': None,
-                'pdf_filepath': None
+                'pdf_filepaths': [],  # Changed to list for multiple PDFs (Issue 007)
+                'pdf_filepath': None  # Backward compatibility: always present, even with no PDFs
             }
 
-            # Try to download PDF attachment if present
-            pdf_filepath = self.download_pdf_attachments(email_uid, download_folder)
-            if pdf_filepath:
-                email_content['pdf_filepath'] = pdf_filepath
-                # Extract text from PDF
+            # Try to download all PDF attachments (Issues 006, 007)
+            pdf_filepaths = self.download_pdf_attachments(email_uid, download_folder, max_pdf_size_mb)
+            if pdf_filepaths:
+                email_content['pdf_filepaths'] = pdf_filepaths
+                # Also keep pdf_filepath for backward compatibility (first PDF)
+                email_content['pdf_filepath'] = pdf_filepaths[0]
+                
+                # Extract text from all PDFs and combine (Issue 007)
                 try:
                     import sys
                     sys.path.append(os.path.dirname(__file__))
                     from pdf_processor import extract_text_from_pdf
-                    pdf_text = extract_text_from_pdf(pdf_filepath)
-                    email_content['pdf_text'] = pdf_text
-                    print(f"Extracted {len(pdf_text)} characters from PDF attachment")
+                    
+                    all_pdf_texts = []
+                    for i, pdf_path in enumerate(pdf_filepaths):
+                        pdf_text = extract_text_from_pdf(pdf_path)
+                        if pdf_text:
+                            # Add separator between multiple PDFs
+                            if len(pdf_filepaths) > 1:
+                                all_pdf_texts.append(f"--- PDF Attachment {i+1} ({os.path.basename(pdf_path)}) ---\n{pdf_text}")
+                            else:
+                                all_pdf_texts.append(pdf_text)
+                            print(f"Extracted {len(pdf_text)} characters from PDF {i+1}")
+                    
+                    email_content['pdf_text'] = "\n\n".join(all_pdf_texts) if all_pdf_texts else None
+                    print(f"Total PDF text: {len(email_content['pdf_text']) if email_content['pdf_text'] else 0} characters from {len(pdf_filepaths)} PDF(s)")
                 except Exception as e:
-                    print(f"Error extracting text from PDF {pdf_filepath}: {e}")
+                    print(f"Error extracting text from PDFs: {e}")
                     email_content['pdf_text'] = "Error extracting PDF text"
 
             print(f"Email content extracted:")
@@ -766,6 +836,7 @@ class EmailClient:
             print(f"  From: {email_content['from']}")
             print(f"  Body length: {len(email_content['body_text'])} characters")
             print(f"  PDF text length: {len(email_content['pdf_text']) if email_content['pdf_text'] else 0} characters")
+            print(f"  PDF attachments: {len(email_content['pdf_filepaths'])}")
             
             return email_content
 

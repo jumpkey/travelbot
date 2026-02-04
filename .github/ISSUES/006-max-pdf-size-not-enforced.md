@@ -2,8 +2,13 @@
 
 **Priority:** High  
 **Category:** Reliability  
-**Status:** Open  
-**Location:** `travelbot/email_client.py:522-603`, `travelbot/pdf_processor.py`
+**Status:** Fixed (PR #14)  
+**Location:** `EmailClient.download_pdf_attachments`
+
+## Fix Applied
+- Added `max_pdf_size_mb` parameter to `download_pdf_attachments()` (default 10MB)
+- Check file size before saving and skip PDFs that exceed the limit
+- Log when PDFs are skipped due to size with file size details
 
 ## Problem
 

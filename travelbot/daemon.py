@@ -740,9 +740,16 @@ If message_type is TRAVEL_ITINERARY: process normally with full ICS and summary.
             
         files_to_cleanup = []
         
-        # Add PDF attachment if exists
-        if email_content.get('pdf_filepath') and os.path.exists(email_content['pdf_filepath']):
-            files_to_cleanup.append(email_content['pdf_filepath'])
+        # Add all PDF attachments if they exist (Issue 007 - multiple PDFs)
+        pdf_filepaths = email_content.get('pdf_filepaths', [])
+        for pdf_path in pdf_filepaths:
+            if pdf_path and os.path.exists(pdf_path):
+                files_to_cleanup.append(pdf_path)
+        
+        # Backward compatibility: also check single pdf_filepath
+        single_pdf = email_content.get('pdf_filepath')
+        if single_pdf and single_pdf not in files_to_cleanup and os.path.exists(single_pdf):
+            files_to_cleanup.append(single_pdf)
             
         # Add ICS file if exists
         if ics_filepath and os.path.exists(ics_filepath):
@@ -1005,7 +1012,9 @@ TravelBot Production Processing System
         email_content = None
         try:
             # Extract complete email content using new attachments directory
-            email_content = self.email_client.get_complete_email_content(email_uid, self.attachments_dir)
+            # Pass max_pdf_size_mb from config (Issue 006)
+            max_pdf_size_mb = self.config.get('email', {}).get('search', {}).get('max_pdf_size_mb', 10)
+            email_content = self.email_client.get_complete_email_content(email_uid, self.attachments_dir, max_pdf_size_mb)
             if not email_content:
                 self.log_with_timestamp(f"✗ Failed to extract content for UID {email_uid}", "ERROR")
                 if self._record_email_failure(email_uid):

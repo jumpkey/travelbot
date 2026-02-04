@@ -2,8 +2,14 @@
 
 **Priority:** Medium  
 **Category:** Efficiency  
-**Status:** Open  
-**Location:** `travelbot/email_client.py:679-695`
+**Status:** Fixed (PR #14)  
+**Location:** `EmailClient.extract_email_body`
+
+## Fix Applied
+- Modified `extract_email_body()` to prefer HTML when available (richer formatting for travel details)
+- Falls back to plain text when HTML is unavailable
+- Only extracts one version of the body to avoid duplication
+- Reduces token usage and prevents LLM confusion from duplicate content
 
 ## Problem
 

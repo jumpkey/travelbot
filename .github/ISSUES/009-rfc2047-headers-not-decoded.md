@@ -2,8 +2,14 @@
 
 **Priority:** Medium  
 **Category:** Correctness  
-**Status:** Open  
-**Location:** `travelbot/email_client.py:739-740`
+**Status:** Fixed (PR #14)  
+**Location:** `EmailClient._decode_email_header`, `EmailClient.get_complete_email_content`
+
+## Fix Applied
+- Added `_decode_email_header()` helper method using `email.header.decode_header()`
+- Applied decoding to Subject, From, and To headers in `get_complete_email_content()`
+- Handles international characters with proper charset detection
+- Falls back to original string if decoding fails
 
 ## Problem
 
