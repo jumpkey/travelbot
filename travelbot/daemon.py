@@ -564,12 +564,17 @@ If message_type is TRAVEL_ITINERARY: process normally with full ICS and summary.
             except json.JSONDecodeError:
                 pass
         
-        # Log the problematic content for debugging
-        self.log_with_timestamp(f"✗ Could not extract JSON from LLM response (length: {len(original_content)})", "ERROR")
-        if len(original_content) < 500:
-            self.log_with_timestamp(f"✗ Response content: {original_content}", "ERROR")
-        else:
-            self.log_with_timestamp(f"✗ Response start: {original_content[:200]}...", "ERROR")
+        # Log the problematic content for debugging (avoid logging full potentially sensitive content)
+        self.log_with_timestamp(
+            f"✗ Could not extract JSON from LLM response (length: {len(original_content)})",
+            "ERROR",
+        )
+        # Only log a short, truncated snippet to avoid exposing PII/travel details
+        snippet = original_content[:100]
+        self.log_with_timestamp(
+            f"✗ Response snippet (truncated to 100 chars): {snippet!r}",
+            "ERROR",
+        )
         
         raise ValueError("Could not extract valid JSON from LLM response")
 
@@ -892,9 +897,12 @@ TravelBot Production Processing System
             msg.add_attachment(ics_data, maintype="text", subtype="calendar", 
                              filename=f"travel_itinerary_{original_email['uid']}.ics")
         else:
-            # Write invalid ICS for debugging purposes but don't attach
-            with open(ics_filepath + '.invalid', 'w', encoding='utf-8') as f:
-                f.write(f"# ICS VALIDATION ERROR: {ics_error}\n\n{ics_content}")
+            # Only write invalid ICS for debugging if retain_files is enabled
+            if self.retain_files:
+                invalid_filepath = ics_filepath + '.invalid'
+                with open(invalid_filepath, 'w', encoding='utf-8') as f:
+                    f.write(f"# ICS VALIDATION ERROR: {ics_error}\n\n{ics_content}")
+                self.log_with_timestamp(f"📝 Invalid ICS saved for debugging: {invalid_filepath}")
             ics_filepath = None  # Don't return invalid file path
         
         # Send email with retry logic (Issue 004)
@@ -952,7 +960,7 @@ TravelBot Production Processing System
 """
         msg.set_content(body)
         
-        # Use the retry logic but with reduced attempts for fallback
+        # Single attempt with timeout (no retry for fallback - best effort only)
         try:
             with smtplib.SMTP(self.config['smtp']['host'], self.config['smtp']['port'], timeout=30) as smtp:
                 smtp.starttls()
