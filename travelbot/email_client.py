@@ -761,8 +761,14 @@ class EmailClient:
         body_text = html_text if html_text else (plain_text or "")
         return body_text.strip()
 
-    def get_complete_email_content(self, email_uid, download_folder="attachments"):
-        """Extract complete email content: headers, body, and PDF attachment text."""
+    def get_complete_email_content(self, email_uid, download_folder="attachments", max_pdf_size_mb=10):
+        """Extract complete email content: headers, body, and PDF attachment text.
+        
+        Args:
+            email_uid: Email UID to fetch
+            download_folder: Folder to save PDF attachments
+            max_pdf_size_mb: Maximum PDF size in MB (default 10MB, Issue 006)
+        """
         if not self.mail:
             print("Not connected. Call connect_imap first.")
             return None
@@ -791,15 +797,16 @@ class EmailClient:
                 'date': msg.get('Date', ''),
                 'body_text': self.extract_email_body(msg),
                 'pdf_text': None,
-                'pdf_filepaths': []  # Changed to list for multiple PDFs (Issue 007)
+                'pdf_filepaths': [],  # Changed to list for multiple PDFs (Issue 007)
+                'pdf_filepath': None  # Backward compatibility: always present, even with no PDFs
             }
 
             # Try to download all PDF attachments (Issues 006, 007)
-            pdf_filepaths = self.download_pdf_attachments(email_uid, download_folder)
+            pdf_filepaths = self.download_pdf_attachments(email_uid, download_folder, max_pdf_size_mb)
             if pdf_filepaths:
                 email_content['pdf_filepaths'] = pdf_filepaths
                 # Also keep pdf_filepath for backward compatibility (first PDF)
-                email_content['pdf_filepath'] = pdf_filepaths[0] if pdf_filepaths else None
+                email_content['pdf_filepath'] = pdf_filepaths[0]
                 
                 # Extract text from all PDFs and combine (Issue 007)
                 try:

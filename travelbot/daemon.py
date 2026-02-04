@@ -1012,7 +1012,9 @@ TravelBot Production Processing System
         email_content = None
         try:
             # Extract complete email content using new attachments directory
-            email_content = self.email_client.get_complete_email_content(email_uid, self.attachments_dir)
+            # Pass max_pdf_size_mb from config (Issue 006)
+            max_pdf_size_mb = self.config.get('email', {}).get('search', {}).get('max_pdf_size_mb', 10)
+            email_content = self.email_client.get_complete_email_content(email_uid, self.attachments_dir, max_pdf_size_mb)
             if not email_content:
                 self.log_with_timestamp(f"✗ Failed to extract content for UID {email_uid}", "ERROR")
                 if self._record_email_failure(email_uid):
