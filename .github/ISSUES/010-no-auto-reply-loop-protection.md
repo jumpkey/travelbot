@@ -2,8 +2,17 @@
 
 **Priority:** Critical  
 **Category:** Reliability / Security  
-**Status:** Open  
+**Status:** Fixed (PR #11)  
 **Location:** `travelbot/daemon.py:550-596`, `travelbot/email_client.py:715-776`
+
+## Fix Applied
+- Added `auto_reply_filter.py` module with RFC 3834 compliant detection
+- Header-based detection (Auto-Submitted, Precedence, Return-Path, X-Auto-Response-Suppress)
+- Address-based blocking (mailer-daemon, postmaster, bounce addresses)
+- Subject pattern detection (out of office, automatic reply, delivery failure)
+- Self-loop prevention (don't reply to own address)
+- Per-recipient rate limiting (max 3 replies per address per hour)
+- Added `ReplyRateLimiter` class for time-windowed rate limiting
 
 ## Problem
 

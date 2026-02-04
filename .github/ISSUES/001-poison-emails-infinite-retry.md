@@ -2,8 +2,14 @@
 
 **Priority:** Critical  
 **Category:** Reliability  
-**Status:** Open  
+**Status:** Fixed (PR #13)  
 **Location:** `travelbot/daemon.py:708-763`
+
+## Fix Applied
+- Added in-memory failure tracking per email UID
+- After 3 failed attempts, email is marked as seen and stops retrying
+- Fallback error notification sent to user when possible
+- Added `_handle_poison_email`, `_record_email_failure`, `_clear_email_failure` methods
 
 ## Problem
 

@@ -2,8 +2,14 @@
 
 **Priority:** Critical  
 **Category:** Reliability  
-**Status:** Open  
+**Status:** Fixed (PR #13)  
 **Location:** `travelbot/daemon.py:518`
+
+## Fix Applied
+- Added explicit timeout (10s connect, 120s read) to `requests.post()`
+- Added retry logic with exponential backoff (3 attempts)
+- Retries on 5xx server errors, timeouts, and connection errors
+- Does not retry on 4xx client errors or JSON parsing errors
 
 ## Problem
 

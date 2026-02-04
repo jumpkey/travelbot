@@ -8,17 +8,17 @@ This directory contains documented issues and improvement opportunities for the 
 
 | ID | Title | Location | Status |
 |----|-------|----------|--------|
-| [001](001-poison-emails-infinite-retry.md) | Poison emails cause infinite retry loops | `daemon.py:708-763` | Open |
-| [002](002-llm-call-no-timeout.md) | LLM call has no timeout | `daemon.py:518` | Open |
-| [003](003-fragile-json-parsing.md) | Fragile JSON parsing of LLM output | `daemon.py:527-544` | Open |
-| [004](004-smtp-no-timeout-retry.md) | SMTP send has no timeout or retry | `daemon.py:696-699` | Open |
-| [010](010-no-auto-reply-loop-protection.md) | No protection against auto-reply email loops | `daemon.py:550-596`, `email_client.py:715-776` | Open |
+| [001](001-poison-emails-infinite-retry.md) | Poison emails cause infinite retry loops | `TravelBotDaemon.process_single_email` | Fixed (PR #13) |
+| [002](002-llm-call-no-timeout.md) | LLM call has no timeout | `TravelBotDaemon.get_comprehensive_response_from_llm` | Fixed (PR #13) |
+| [003](003-fragile-json-parsing.md) | Fragile JSON parsing of LLM output | `TravelBotDaemon._extract_json_from_llm_response` | Fixed (PR #13) |
+| [004](004-smtp-no-timeout-retry.md) | SMTP send has no timeout or retry | `TravelBotDaemon._send_email_with_retry` | Fixed (PR #13) |
+| [010](010-no-auto-reply-loop-protection.md) | No protection against auto-reply email loops | `auto_reply_filter.py`, `email_client.py` | Fixed (PR #11) |
 
 ### High (Correctness/Reliability)
 
 | ID | Title | Location | Status |
 |----|-------|----------|--------|
-| [005](005-ics-content-not-validated.md) | ICS content never validated | `daemon.py:683-692` | Open |
+| [005](005-ics-content-not-validated.md) | ICS content never validated | `TravelBotDaemon._validate_ics_content` | Fixed (PR #13) |
 | [006](006-max-pdf-size-not-enforced.md) | max_pdf_size_mb config not enforced | `email_client.py`, `pdf_processor.py` | Open |
 
 ### Medium (Correctness/Efficiency)

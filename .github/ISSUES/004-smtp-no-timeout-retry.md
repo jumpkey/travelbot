@@ -2,8 +2,14 @@
 
 **Priority:** Critical  
 **Category:** Reliability  
-**Status:** Open  
+**Status:** Fixed (PR #13)  
 **Location:** `travelbot/daemon.py:696-699`
+
+## Fix Applied
+- Added 30 second timeout to `smtplib.SMTP` connection
+- Added `_send_email_with_retry()` method with exponential backoff (3 attempts)
+- Retries on transient errors (disconnect, connection, timeout, network)
+- Does not retry on authentication or recipient errors
 
 ## Problem
 

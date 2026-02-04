@@ -2,8 +2,14 @@
 
 **Priority:** Critical  
 **Category:** Reliability  
-**Status:** Open  
+**Status:** Fixed (PR #13)  
 **Location:** `travelbot/daemon.py:527-544`
+
+## Fix Applied
+- Added `_extract_json_from_llm_response()` method for robust JSON extraction
+- Handles various markdown fence styles (```json, ```, ~~~)
+- Falls back to finding first `{` and last `}` to extract JSON
+- Logs problematic content for debugging
 
 ## Problem
 
