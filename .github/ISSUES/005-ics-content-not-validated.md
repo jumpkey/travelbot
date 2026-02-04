@@ -2,8 +2,14 @@
 
 **Priority:** High  
 **Category:** Correctness  
-**Status:** Open  
+**Status:** Fixed (PR #13)  
 **Location:** `travelbot/daemon.py:683-692`
+
+## Fix Applied
+- Added `_validate_ics_content()` method using `icalendar.Calendar.from_ical()`
+- Invalid ICS content results in sending email without calendar attachment
+- User receives note explaining calendar could not be generated
+- Invalid ICS written to `.invalid` file for debugging
 
 ## Problem
 

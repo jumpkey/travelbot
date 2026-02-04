@@ -181,6 +181,21 @@ For support and questions:
 - Documentation: [docs/](docs/)
 - Issues: Use the project issue tracker
 
+## 🔧 Issues Corrected
+
+The following reliability and correctness issues have been addressed:
+
+| Issue | Description | Fix Summary |
+|-------|-------------|-------------|
+| #001 | Poison emails cause infinite retry loops | In-memory failure tracking; after 3 failures, email marked as seen with fallback notification |
+| #002 | LLM call has no timeout | Added 10s/120s connect/read timeout with exponential backoff retry |
+| #003 | Fragile JSON parsing of LLM output | Robust JSON extraction handling various markdown fence styles |
+| #004 | SMTP send has no timeout or retry | Added 30s timeout with exponential backoff retry for transient errors |
+| #005 | ICS content never validated | Validation using icalendar library; graceful fallback if invalid |
+| #010 | No auto-reply loop protection | RFC 3834 compliant detection, rate limiting, self-loop prevention |
+
+See [.github/ISSUES/](.github/ISSUES/) for detailed issue documentation.
+
 ## 🎯 Version
 
 **TravelBot v1.0.0** - Professional production release
