@@ -7,6 +7,8 @@ This module provides heuristic-based detection of auto-generated emails
 RFC 3834 defines standard headers for automatic responses.
 """
 
+import time
+
 from email.message import Message
 from email.utils import parseaddr
 from typing import Tuple, Optional, Dict, Any
@@ -105,63 +107,16 @@ def should_skip_auto_reply(
     return False, None
 
 
-def get_message_type_from_headers(
-    msg: Message,
-    email_content: Dict[str, Any]
-) -> Tuple[str, Optional[str]]:
-    """
-    Classify message type based on headers (before LLM call).
-    
-    Returns:
-        Tuple of (message_type: str, reason: str or None)
-        message_type is one of: "AUTO_REPLY", "BOUNCE", "MAILING_LIST", "NORMAL"
-    """
-    
-    # Check for auto-reply indicators
-    auto_submitted = (msg.get('Auto-Submitted') or '').lower().strip()
-    if auto_submitted == 'auto-replied':
-        return "AUTO_REPLY", f"Auto-Submitted: {auto_submitted}"
-    
-    # Check for bounce indicators
-    return_path = msg.get('Return-Path') or ''
-    from_addr = email_content.get('from', '').lower()
-    
-    if return_path == '<>' or 'mailer-daemon' in from_addr or 'postmaster' in from_addr:
-        return "BOUNCE", "Bounce/DSN indicators present"
-    
-    # Check for auto-generated (could be notification, not reply)
-    if auto_submitted == 'auto-generated' or auto_submitted == 'auto-notified':
-        return "AUTO_REPLY", f"Auto-Submitted: {auto_submitted}"
-    
-    # Check for mailing list
-    if msg.get('List-Id') or msg.get('List-Unsubscribe'):
-        return "MAILING_LIST", "Mailing list headers present"
-    
-    # Check precedence
-    precedence = (msg.get('Precedence') or '').lower().strip()
-    if precedence in ('bulk', 'junk', 'list'):
-        return "MAILING_LIST", f"Precedence: {precedence}"
-    
-    # Check subject patterns for auto-reply
-    subject = email_content.get('subject', '').lower()
-    ooo_patterns = ['out of office', 'automatic reply', 'auto-reply', 'autoreply']
-    for pattern in ooo_patterns:
-        if pattern in subject:
-            return "AUTO_REPLY", f"Subject contains: {pattern}"
-    
-    bounce_patterns = ['delivery status', 'delivery failure', 'undeliverable', 'returned mail']
-    for pattern in bounce_patterns:
-        if pattern in subject:
-            return "BOUNCE", f"Subject contains: {pattern}"
-    
-    return "NORMAL", None
-
-
 class ReplyRateLimiter:
     """
     Rate limiter to prevent sending too many replies to the same address.
-    
+
     This is a safety net in case auto-reply detection fails.
+
+    Note: Reply history is stored in memory and is lost when the daemon
+    restarts. This is acceptable because the primary defense (Layer 1:
+    should_skip_auto_reply) is stateless and catches most auto-replies.
+    This rate limiter is a secondary safety net.
     """
     
     def __init__(
@@ -176,7 +131,6 @@ class ReplyRateLimiter:
             window_seconds: Time window in seconds (default 1 hour)
             now_func: Optional function returning current time (for testing)
         """
-        import time
         self.max_replies = max_replies
         self.window_seconds = window_seconds
         self.now_func = now_func or time.time

@@ -25,7 +25,8 @@ __version__ = "1.0.0"
 __author__ = "TravelBot Development Team"
 __email__ = "travelbot@example.com"
 
+from .daemon import TravelBotDaemon
 from .email_client import EmailClient
 from .pdf_processor import extract_text_from_pdf
 
-__all__ = ['EmailClient', 'extract_text_from_pdf']
+__all__ = ['TravelBotDaemon', 'EmailClient', 'extract_text_from_pdf']

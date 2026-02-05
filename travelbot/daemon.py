@@ -7,10 +7,10 @@ processes them with comprehensive travel service detection, and sends back perso
 calendar responses with timezone intelligence.
 
 Usage:
-    python3 travelbot_daemon.py [--poll-interval SECONDS]
-    
+    python3 scripts/start_travelbot.py [--poll-interval SECONDS] [--retain-files] [--verbose]
+
 For background operation:
-    nohup python3 travelbot_daemon.py > travelbot.log 2>&1 &
+    nohup python3 scripts/start_travelbot.py > travelbot.log 2>&1 &
 """
 
 import sys
@@ -29,6 +29,7 @@ from .auto_reply_filter import should_skip_auto_reply, ReplyRateLimiter
 import re
 import json
 import email
+import traceback
 from icalendar import Calendar
 
 class TravelBotDaemon:
@@ -73,7 +74,23 @@ class TravelBotDaemon:
     def load_config(self):
         config_file = os.path.join(os.path.dirname(__file__), self.config_path)
         with open(config_file, 'r') as f:
-            return yaml.safe_load(f)
+            config = yaml.safe_load(f)
+        return self._expand_env_vars(config)
+
+    @staticmethod
+    def _expand_env_vars(obj):
+        """Recursively expand ${VAR} environment variable references in config values."""
+        if isinstance(obj, str):
+            return re.sub(
+                r'\$\{([^}]+)\}',
+                lambda m: os.environ.get(m.group(1), m.group(0)),
+                obj,
+            )
+        if isinstance(obj, dict):
+            return {k: TravelBotDaemon._expand_env_vars(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [TravelBotDaemon._expand_env_vars(item) for item in obj]
+        return obj
     
     def log_with_timestamp(self, message, level="INFO"):
         """Log message with timestamp and immediate flush."""
@@ -176,7 +193,6 @@ class TravelBotDaemon:
                     self.connect_to_mailbox()
                 
                 # Add small delay to ensure email is fully committed
-                import time
                 time.sleep(1)
             
             # Search for unread emails
@@ -202,7 +218,6 @@ class TravelBotDaemon:
                 
         except Exception as e:
             self.log_with_timestamp(f"✗ Error during email check ({reason}): {e}", "ERROR")
-            import traceback
             traceback.print_exc()
             # Don't re-raise - continue with IDLE monitoring
 
@@ -210,15 +225,20 @@ class TravelBotDaemon:
         """Switch to polling mode when IDLE fails."""
         self.log_with_timestamp(f"🔄 Falling back to polling mode: {reason}", "WARN")
         self.idle_enabled = False
-        
+
         # Cleanup IDLE connection
         if self.idle_client:
             try:
                 self.email_client.idle_cleanup(self.idle_client)
-            except:
+            except Exception:
                 pass
             self.idle_client = None
-            
+
+        # Use idle_fallback_polling interval if configured
+        fallback_interval = self.config['email']['imap'].get('idle_fallback_polling')
+        if fallback_interval is not None:
+            self.poll_interval = fallback_interval
+
         # Start polling loop
         return self.run_polling_loop()
 
@@ -291,7 +311,6 @@ class TravelBotDaemon:
                 except Exception as e:
                     consecutive_errors += 1
                     self.log_with_timestamp(f"✗ IDLE cycle error ({consecutive_errors}/{max_consecutive_errors}): {e}", "ERROR")
-                    import traceback
                     traceback.print_exc()
                     
                     if consecutive_errors >= max_consecutive_errors:
@@ -306,7 +325,6 @@ class TravelBotDaemon:
             self.log_with_timestamp("🛑 Received interrupt signal. Shutting down...")
         except Exception as e:
             self.log_with_timestamp(f"💥 Fatal IDLE error: {e}", "ERROR")
-            import traceback
             traceback.print_exc()
         finally:
             self.running = False
@@ -354,7 +372,8 @@ class TravelBotDaemon:
                 self.log_with_timestamp(f"✗ Connection error (attempt {attempt + 1}): {e}", "ERROR")
                 
             if attempt < max_retries - 1:
-                time.sleep(5)  # Wait 5 seconds before retry
+                retry_delay = self.config['email']['imap'].get('connection_retry_delay', 5)
+                time.sleep(retry_delay)
                 
         return False
     
@@ -397,7 +416,6 @@ class TravelBotDaemon:
                 
         except Exception as e:
             self.log_with_timestamp(f"✗ Unexpected error during email search: {e}", "ERROR")
-            import traceback
             traceback.print_exc()
             return []
     

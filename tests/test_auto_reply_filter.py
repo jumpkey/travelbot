@@ -8,7 +8,6 @@ These tests verify that TravelBot correctly identifies auto-generated emails
 from email.message import EmailMessage
 from travelbot.auto_reply_filter import (
     should_skip_auto_reply,
-    get_message_type_from_headers,
     ReplyRateLimiter,
 )
 
@@ -261,61 +260,6 @@ class TestShouldSkipAutoReply:
         skip, reason = should_skip_auto_reply(msg, email_content, "travelbot@example.com")
         
         assert skip is True
-
-
-class TestGetMessageTypeFromHeaders:
-    """Tests for message type classification."""
-
-    def test_normal_message(self):
-        """Normal email should be classified as NORMAL."""
-        msg = make_msg({
-            "From": "user@example.com",
-            "Subject": "Flight confirmation",
-        })
-        email_content = make_email_content("user@example.com", "Flight confirmation")
-        
-        msg_type, reason = get_message_type_from_headers(msg, email_content)
-        
-        assert msg_type == "NORMAL"
-
-    def test_auto_reply_classification(self):
-        """Auto-replied message should be classified as AUTO_REPLY."""
-        msg = make_msg({
-            "From": "user@example.com",
-            "Subject": "Re: Your message",
-            "Auto-Submitted": "auto-replied",
-        })
-        email_content = make_email_content("user@example.com", "Re: Your message")
-        
-        msg_type, reason = get_message_type_from_headers(msg, email_content)
-        
-        assert msg_type == "AUTO_REPLY"
-
-    def test_bounce_classification(self):
-        """Bounce message should be classified as BOUNCE."""
-        msg = make_msg({
-            "From": "MAILER-DAEMON@example.com",
-            "Subject": "Delivery Status Notification",
-            "Return-Path": "<>",
-        })
-        email_content = make_email_content("MAILER-DAEMON@example.com", "Delivery Status Notification")
-        
-        msg_type, reason = get_message_type_from_headers(msg, email_content)
-        
-        assert msg_type == "BOUNCE"
-
-    def test_mailing_list_classification(self):
-        """Mailing list message should be classified as MAILING_LIST."""
-        msg = make_msg({
-            "From": "user@example.com",
-            "Subject": "Discussion",
-            "List-Id": "<dev.example.com>",
-        })
-        email_content = make_email_content("user@example.com", "Discussion")
-        
-        msg_type, reason = get_message_type_from_headers(msg, email_content)
-        
-        assert msg_type == "MAILING_LIST"
 
 
 class TestReplyRateLimiter:

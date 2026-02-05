@@ -11,7 +11,7 @@ Main processing daemon class that handles email monitoring and travel processing
 ```python
 from travelbot.daemon import TravelBotDaemon
 
-daemon = TravelBotDaemon(config_path="config.yaml", poll_interval=30, retain_files=False)
+daemon = TravelBotDaemon(config_path="config.yaml", poll_interval=30, retain_files=False, verbose=False)
 daemon.run_main_loop()  # Automatically chooses IDLE or polling mode
 ```
 
@@ -20,6 +20,7 @@ daemon.run_main_loop()  # Automatically chooses IDLE or polling mode
 - **config_path** (str): Path to configuration file (default: "config.yaml")
 - **poll_interval** (int): Email polling interval in seconds (default: 30)
 - **retain_files** (bool): Retain work files after processing for debugging (default: False)
+- **verbose** (bool): Enable verbose logging for IDLE monitoring (default: False)
 
 #### Methods
 
@@ -105,13 +106,14 @@ Sets up dedicated IDLE connection with IMAPClient.
 
 **Returns**: `IMAPClient` - IDLE client connection
 
-##### `start_idle_monitoring(idle_client, callback, timeout=1740)`
+##### `start_idle_monitoring(idle_client, callback, timeout=1740, verbose=False)`
 Starts IDLE monitoring with callback for new messages.
 
 **Parameters**:
 - `idle_client` (IMAPClient): IDLE connection client
 - `callback` (callable): Function to call on new messages
 - `timeout` (int): IDLE timeout in seconds (default: 1740)
+- `verbose` (bool): Enable verbose IDLE logging (default: False)
 
 **Returns**: `threading.Thread` - IDLE monitoring thread
 
@@ -123,22 +125,32 @@ Processes IDLE server responses.
 
 **Returns**: `dict` - Parsed response with type and details
 
-##### `search_emails(criteria)`
-Searches for emails matching criteria.
+##### `search_emails(criteria, charset='UTF-8', max_retries=3)`
+Searches for emails matching criteria with connection recovery and retry logic.
 
 **Parameters**:
-- `criteria` (list): Search criteria (e.g., ['UNSEEN'])
+- `criteria` (list): Search criteria (e.g., `['UNSEEN']`)
+- `charset` (str): Character set for search (default: `'UTF-8'`)
+- `max_retries` (int): Maximum retry attempts on failure (default: 3)
 
-**Returns**: `list` - List of email UIDs
+**Returns**: `dict` - Structured result:
+```python
+{
+    'success': True,        # Whether the search succeeded
+    'uids': ['1', '2'],    # List of matching email UIDs (empty list if none)
+    'error': None           # Error message string, or None on success
+}
+```
 
-##### `get_complete_email_content(uid, download_folder="work/attachments")`
+##### `get_complete_email_content(uid, download_folder="attachments", max_pdf_size_mb=10)`
 Extracts complete email content including attachments.
 
 **Parameters**:
 - `uid` (str): Email UID
-- `download_folder` (str): Directory for PDF downloads
+- `download_folder` (str): Directory for PDF downloads (default: `"attachments"`)
+- `max_pdf_size_mb` (int): Maximum PDF size in MB to process (default: 10)
 
-**Returns**: `dict` - Email content dictionary
+**Returns**: `dict` - Email content dictionary, or `None` on failure
 
 ##### `generate_unique_filename(base_filename, directory)`
 Generates unique filename with timestamp and UUID prefix.
@@ -158,13 +170,14 @@ Structure returned by `get_complete_email_content()`:
 ```python
 {
     'uid': '123',                    # Email UID
-    'subject': 'Travel Itinerary',   # Email subject
-    'from': 'sender@example.com',    # Sender address
-    'to': 'recipient@example.com',   # Recipient address
+    'subject': 'Travel Itinerary',   # Decoded subject (RFC2047)
+    'from': 'sender@example.com',    # Decoded sender address (RFC2047)
+    'to': 'recipient@example.com',   # Decoded recipient address (RFC2047)
     'date': '2025-05-30',           # Email date
-    'body_text': 'Email body...',   # Plain text body
-    'pdf_text': 'Extracted PDF...',  # PDF attachment text
-    'pdf_filepath': '/path/to/file.pdf'  # PDF file path
+    'body_text': 'Email body...',   # Email body (HTML preferred, plain text fallback)
+    'pdf_text': 'Extracted PDF...',  # Combined text from all PDF attachments
+    'pdf_filepaths': ['/path/to/file1.pdf', '/path/to/file2.pdf'],  # All PDF file paths
+    'pdf_filepath': '/path/to/file1.pdf'  # First PDF path (backward compatibility)
 }
 ```
 
@@ -189,7 +202,6 @@ Configuration loaded from `config.yaml`:
         'password': 'password'
     },
     'email': {
-        'client_type': 'imap',
         'imap': {
             'host': 'imap.example.com',
             'port': 993,
@@ -231,8 +243,10 @@ JSON response from Azure OpenAI:
 
 ```python
 {
-    'ics_content': 'BEGIN:VCALENDAR\nVERSION:2.0\n...',
-    'email_summary': 'Your Boston Travel Itinerary...'
+    'message_type': 'TRAVEL_ITINERARY',   # Classification: TRAVEL_ITINERARY, AUTO_REPLY, BOUNCE, NON_TRAVEL
+    'message_type_reason': 'Contains flight and hotel bookings',  # Brief classification rationale
+    'ics_content': 'BEGIN:VCALENDAR\nVERSION:2.0\n...',          # Generated .ics calendar content
+    'email_summary': 'Your Boston Travel Itinerary...'            # Professional travel digest
 }
 ```
 
@@ -367,7 +381,7 @@ import backoff         # Retry logic
 import threading       # IDLE monitoring
 
 # PDF processing
-import PyPDF2          # PDF text extraction
+import pdfplumber      # PDF text extraction
 from html2text import html2text  # HTML conversion
 ```
 
@@ -482,11 +496,14 @@ parser.add_argument('--poll-interval', type=int, default=30,
                    help='Email polling interval in seconds (default: 30)')
 parser.add_argument('--retain-files', action='store_true',
                    help='Retain work files after processing for debugging')
+parser.add_argument('--verbose', action='store_true',
+                   help='Enable verbose logging for IDLE monitoring')
 
 args = parser.parse_args()
 daemon = TravelBotDaemon(
     poll_interval=args.poll_interval,
-    retain_files=args.retain_files
+    retain_files=args.retain_files,
+    verbose=args.verbose
 )
 ```
 

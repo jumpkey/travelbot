@@ -61,7 +61,8 @@ travelbot/
 ├── travelbot/              # Core package
 │   ├── __init__.py         # Package initialization
 │   ├── daemon.py           # Main processing daemon
-│   ├── email_client.py     # Email handling (IMAP/POP3)
+│   ├── email_client.py     # Email handling (IMAP)
+│   ├── auto_reply_filter.py # Auto-reply/bounce detection (RFC 3834)
 │   ├── pdf_processor.py    # PDF text extraction
 │   └── config.yaml         # Configuration file
 ├── scripts/                # Startup and utility scripts
@@ -112,6 +113,7 @@ nohup python3 scripts/start_travelbot.py --poll-interval 30 > travelbot.log 2>&1
 **Options:**
 - `--poll-interval SECONDS`: Email polling interval in seconds (default: 30)
 - `--retain-files`: Retain work files (attachments and ICS files) after processing for debugging
+- `--verbose`: Enable verbose logging for IDLE monitoring details
 
 ### Monitoring
 
@@ -197,6 +199,22 @@ The following reliability and correctness issues have been addressed:
 | #008 | Email body duplicated from plain+HTML | Prefer HTML content; fall back to plain text; avoid duplication |
 | #009 | RFC2047 headers not decoded | Decode Subject/From/To headers using email.header.decode_header() |
 | #010 | No auto-reply loop protection | RFC 3834 compliant detection, rate limiting, self-loop prevention |
+| #011 | Env var expansion not implemented | Recursive `${VAR}` expansion in config via `_expand_env_vars()` |
+| #012 | sys.path manipulation in email_client | Replaced with relative import (`from .pdf_processor import ...`) |
+| #013 | API docs wrong return type for search_emails | Updated docs to match structured `{success, uids, error}` format |
+| #014 | API docs reference PyPDF2 | Updated to pdfplumber |
+| #015 | POP3 documented but not implemented | Removed POP3 references from config, docs, and README |
+| #016 | \_\_init\_\_.py missing TravelBotDaemon | Added import and `__all__` entry |
+| #017 | Documented config options not implemented | Removed aspirational config sections (filters, custom prompts, logging) |
+| #018 | API docs outdated signatures | Updated constructor, method signatures, and data structures |
+| #019 | Bare except clauses | Replaced `except:` with `except Exception:` |
+| #020 | pdfplumber exception path may not exist | Import-time resolution with `AttributeError` fallback |
+| #021 | Unused get_message_type_from_headers | Removed dead code and corresponding tests |
+| #022 | Redundant imports and stray pass | Module-level imports; removed stray `pass` |
+| #023 | Daemon docstring wrong filename | Updated to reference `scripts/start_travelbot.py` |
+| #024 | --verbose not in README | Added to CLI options list |
+| #026 | Rate limiter state lost on restart | Documented as known limitation (secondary safety net) |
+| #027 | IDLE config values not wired up | `connection_retry_delay` and `idle_fallback_polling` now read from config |
 
 See [.github/ISSUES/](.github/ISSUES/) for detailed issue documentation.
 
