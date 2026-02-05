@@ -2,8 +2,12 @@
 
 **Priority:** Low
 **Category:** Documentation
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/daemon.py:10-13`
+
+## Fix Applied
+- Updated module docstring to reference `scripts/start_travelbot.py` instead of `travelbot_daemon.py`
+- Added `--retain-files` and `--verbose` flags to the usage example
 
 ## Problem
 
@@ -35,5 +39,5 @@ Usage:
 
 ## Acceptance Criteria
 
-- [ ] Daemon module docstring shows correct usage command
-- [ ] Usage is consistent with README and operations docs
+- [x] Daemon module docstring shows correct usage command
+- [x] Usage is consistent with README and operations docs

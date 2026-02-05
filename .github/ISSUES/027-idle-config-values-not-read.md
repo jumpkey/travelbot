@@ -2,8 +2,12 @@
 
 **Priority:** Low
 **Category:** Correctness
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/config.yaml.example:34-36`, `travelbot/daemon.py:357,301`
+
+## Fix Applied
+- `connection_retry_delay`: `connect_to_mailbox()` now reads `self.config['email']['imap'].get('connection_retry_delay', 5)` instead of hardcoded `5`
+- `idle_fallback_polling`: `fallback_to_polling()` now reads and applies `idle_fallback_polling` config value to override `self.poll_interval` when falling back from IDLE
 
 ## Problem
 
@@ -38,5 +42,5 @@ Either:
 
 ## Acceptance Criteria
 
-- [ ] Config values are either used by code or removed from config template
-- [ ] Documentation matches implementation
+- [x] Config values are either used by code or removed from config template
+- [x] Documentation matches implementation

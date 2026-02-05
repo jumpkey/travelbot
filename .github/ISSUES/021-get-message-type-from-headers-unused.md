@@ -2,8 +2,13 @@
 
 **Priority:** Low
 **Category:** Efficiency
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/auto_reply_filter.py:108-157`
+
+## Fix Applied
+- Removed `get_message_type_from_headers()` function (dead code) from `auto_reply_filter.py`
+- Removed `TestGetMessageTypeFromHeaders` test class and import from `test_auto_reply_filter.py`
+- 4 tests removed (32 remaining, all passing)
 
 ## Problem
 
@@ -33,5 +38,5 @@ Either:
 
 ## Acceptance Criteria
 
-- [ ] Dead code is removed, OR the function is integrated into the processing pipeline
-- [ ] If removed, corresponding tests are also removed
+- [x] Dead code is removed, OR the function is integrated into the processing pipeline
+- [x] If removed, corresponding tests are also removed

@@ -2,8 +2,12 @@
 
 **Priority:** Low
 **Category:** Reliability
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/auto_reply_filter.py:160-224`, `travelbot/daemon.py:57`
+
+## Fix Applied
+- Documented the in-memory limitation in the `ReplyRateLimiter` class docstring
+- Explains that the primary defense (Layer 1: `should_skip_auto_reply`) is stateless and catches most auto-replies, making the rate limiter a secondary safety net where persistence is not critical
 
 ## Problem
 
@@ -31,5 +35,5 @@ Options (in order of complexity):
 
 ## Acceptance Criteria
 
-- [ ] Rate-limit state survives daemon restarts, OR the limitation is documented
-- [ ] Rate limiter still performs well (no I/O bottleneck on every email)
+- [x] Rate-limit state survives daemon restarts, OR the limitation is documented
+- [x] Rate limiter still performs well (no I/O bottleneck on every email)

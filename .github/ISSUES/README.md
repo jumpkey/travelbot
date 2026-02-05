@@ -43,13 +43,13 @@ This directory contains documented issues and improvement opportunities for the 
 
 | ID | Title | Location | Status |
 |----|-------|----------|--------|
-| [021](021-get-message-type-from-headers-unused.md) | get_message_type_from_headers function is unused | `auto_reply_filter.py:108-157` | Open |
-| [022](022-redundant-imports-and-stray-pass.md) | Redundant local imports and stray pass statement | `daemon.py`, `email_client.py:849` | Open |
-| [023](023-daemon-docstring-references-wrong-filename.md) | Daemon module docstring references wrong filename | `daemon.py:10-13` | Open |
-| [024](024-verbose-flag-not-documented-in-readme.md) | --verbose flag not documented in README | `README.md:112-115` | Open |
+| [021](021-get-message-type-from-headers-unused.md) | get_message_type_from_headers function is unused | `auto_reply_filter.py:108-157` | Fixed |
+| [022](022-redundant-imports-and-stray-pass.md) | Redundant local imports and stray pass statement | `daemon.py`, `email_client.py:849` | Fixed |
+| [023](023-daemon-docstring-references-wrong-filename.md) | Daemon module docstring references wrong filename | `daemon.py:10-13` | Fixed |
+| [024](024-verbose-flag-not-documented-in-readme.md) | --verbose flag not documented in README | `README.md:112-115` | Fixed |
 | [025](025-limited-test-coverage.md) | Test coverage limited to single module | `tests/` | Open |
-| [026](026-rate-limiter-state-lost-on-restart.md) | In-memory rate limiter state lost on restart | `auto_reply_filter.py:160-224` | Open |
-| [027](027-idle-config-values-not-read.md) | IDLE config values never read from config | `config.yaml.example:34-36`, `daemon.py` | Open |
+| [026](026-rate-limiter-state-lost-on-restart.md) | In-memory rate limiter state lost on restart | `auto_reply_filter.py:160-224` | Fixed |
+| [027](027-idle-config-values-not-read.md) | IDLE config values never read from config | `config.yaml.example:34-36`, `daemon.py` | Fixed |
 
 ## Workflow
 

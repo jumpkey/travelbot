@@ -2,8 +2,12 @@
 
 **Priority:** Low
 **Category:** Documentation
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `README.md:112-115`
+
+## Fix Applied
+- Added `--verbose` to README CLI options list
+- Items 2 and 3 (API docs constructor and `start_idle_monitoring`) were already fixed in the Issue 018 batch
 
 ## Problem
 
@@ -34,6 +38,6 @@ Also add it to the `docs/api.md` constructor parameters.
 
 ## Acceptance Criteria
 
-- [ ] `--verbose` is documented in README CLI options
-- [ ] `--verbose` is documented in API docs constructor parameters
-- [ ] `verbose` parameter of `start_idle_monitoring` is documented
+- [x] `--verbose` is documented in README CLI options
+- [x] `--verbose` is documented in API docs constructor parameters
+- [x] `verbose` parameter of `start_idle_monitoring` is documented

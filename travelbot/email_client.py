@@ -9,6 +9,7 @@ import threading
 import backoff
 from html2text import html2text
 import re
+import traceback
 try:
     from imapclient import IMAPClient
     IMAPCLIENT_AVAILABLE = True
@@ -142,7 +143,6 @@ class EmailClient:
                     # If search failed but connection seems OK, it might be a server issue
                     print(f"Search failed on attempt {attempt + 1}: {result['error']}")
                     if attempt < max_retries - 1:
-                        import time
                         wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
                         print(f"Retrying in {wait_time} seconds...")
                         time.sleep(wait_time)
@@ -152,7 +152,6 @@ class EmailClient:
             except Exception as e:
                 print(f"Search attempt {attempt + 1} failed with exception: {e}")
                 if attempt < max_retries - 1:
-                    import time
                     wait_time = 2 ** attempt
                     print(f"Retrying in {wait_time} seconds...")
                     time.sleep(wait_time)
@@ -190,7 +189,6 @@ class EmailClient:
         except Exception as e:
             error_msg = f"Unexpected error during search: {e}"
             print(f"✗ {error_msg}")
-            import traceback
             traceback.print_exc()
             return {'success': False, 'uids': [], 'error': error_msg}
 
@@ -294,7 +292,6 @@ class EmailClient:
                 headers_map[uid] = None
             except Exception as e:
                 print(f"Unexpected error fetching headers for UID {uid}: {e}")
-                import traceback
                 traceback.print_exc()
                 headers_map[uid] = None
         return headers_map
@@ -330,7 +327,6 @@ class EmailClient:
             return False
         except Exception as e:
             print(f"Unexpected error storing flags: {e}")
-            import traceback
             traceback.print_exc()
             return False
 
@@ -463,7 +459,6 @@ class EmailClient:
                         
             except Exception as e:
                 print(f"Error in IDLE monitoring: {e}")
-                import traceback
                 traceback.print_exc()
             finally:
                 try:
@@ -642,7 +637,6 @@ class EmailClient:
             return []
         except Exception as e_main:
             print(f"An unexpected error occurred downloading attachments for UID {email_uid}: {e_main}")
-            import traceback
             traceback.print_exc()
             return []
 
@@ -702,7 +696,6 @@ class EmailClient:
             return False
         except Exception as e_reset:
             print(f"Unexpected error during reset_all_emails_to_unseen: {e_reset}")
-            import traceback
             traceback.print_exc()
             return False
 
@@ -840,8 +833,5 @@ class EmailClient:
 
         except Exception as e:
             print(f"Error extracting complete email content for UID {email_uid}: {e}")
-            import traceback
             traceback.print_exc()
             return None
-
-pass
