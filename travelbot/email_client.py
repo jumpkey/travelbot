@@ -810,9 +810,7 @@ class EmailClient:
                 
                 # Extract text from all PDFs and combine (Issue 007)
                 try:
-                    import sys
-                    sys.path.append(os.path.dirname(__file__))
-                    from pdf_processor import extract_text_from_pdf
+                    from .pdf_processor import extract_text_from_pdf
                     
                     all_pdf_texts = []
                     for i, pdf_path in enumerate(pdf_filepaths):

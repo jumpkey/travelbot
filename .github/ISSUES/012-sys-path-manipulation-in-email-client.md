@@ -2,8 +2,12 @@
 
 **Priority:** High
 **Category:** Correctness
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/email_client.py:813-815`
+
+## Fix Applied
+- Replaced three-line `sys.path.append` + absolute import with a single relative import: `from .pdf_processor import extract_text_from_pdf`
+- The import is now inside `get_complete_email_content()` at the point of use (lazy import), consistent with the existing try/except error handling around PDF extraction
 
 ## Problem
 
@@ -39,6 +43,6 @@ Remove the `sys.path.append` and local `import sys` from `get_complete_email_con
 
 ## Acceptance Criteria
 
-- [ ] `pdf_processor` is imported via relative import
-- [ ] No `sys.path.append` calls remain in `email_client.py`
-- [ ] PDF extraction still works correctly (existing tests pass)
+- [x] `pdf_processor` is imported via relative import
+- [x] No `sys.path.append` calls remain in `email_client.py`
+- [x] PDF extraction still works correctly (existing tests pass)

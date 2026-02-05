@@ -2,8 +2,15 @@
 
 **Priority:** High
 **Category:** Documentation
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `docs/api.md:127-132`
+
+## Fix Applied
+- Updated `search_emails` docs to show correct `dict` return type with `success`, `uids`, and `error` fields
+- Updated `get_complete_email_content` signature to include `max_pdf_size_mb` parameter
+- Updated Email Content Dictionary to include `pdf_filepaths` (list) field
+- Updated LLM Response Structure to include `message_type` and `message_type_reason` fields
+- Fixed PyPDF2 reference to pdfplumber in External Dependencies section
 
 ## Problem
 
@@ -36,6 +43,6 @@ Also update the `get_complete_email_content` signature docs to include the `max_
 
 ## Acceptance Criteria
 
-- [ ] `search_emails` return type is correctly documented as `dict`
-- [ ] Dict fields (`success`, `uids`, `error`) are documented
-- [ ] Example code in docs uses the correct return type
+- [x] `search_emails` return type is correctly documented as `dict`
+- [x] Dict fields (`success`, `uids`, `error`) are documented
+- [x] Example code in docs uses the correct return type

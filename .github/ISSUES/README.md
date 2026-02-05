@@ -20,9 +20,9 @@ This directory contains documented issues and improvement opportunities for the 
 |----|-------|----------|--------|
 | [005](005-ics-content-not-validated.md) | ICS content never validated | `TravelBotDaemon._validate_ics_content` | Fixed (PR #13) |
 | [006](006-max-pdf-size-not-enforced.md) | max_pdf_size_mb config not enforced | `EmailClient.download_pdf_attachments` | Fixed (PR #14) |
-| [011](011-env-var-expansion-not-implemented.md) | Env var expansion documented but not implemented | `daemon.py:73-76`, `docs/configuration.md` | Open |
-| [012](012-sys-path-manipulation-in-email-client.md) | sys.path manipulation instead of relative import | `email_client.py:813-815` | Open |
-| [013](013-search-emails-return-type-wrong-in-docs.md) | API docs show wrong return type for search_emails | `docs/api.md:127-132` | Open |
+| [011](011-env-var-expansion-not-implemented.md) | Env var expansion documented but not implemented | `daemon.py:73-76`, `docs/configuration.md` | Fixed |
+| [012](012-sys-path-manipulation-in-email-client.md) | sys.path manipulation instead of relative import | `email_client.py:813-815` | Fixed |
+| [013](013-search-emails-return-type-wrong-in-docs.md) | API docs show wrong return type for search_emails | `docs/api.md:127-132` | Fixed |
 
 ### Medium (Correctness/Efficiency)
 

@@ -73,7 +73,23 @@ class TravelBotDaemon:
     def load_config(self):
         config_file = os.path.join(os.path.dirname(__file__), self.config_path)
         with open(config_file, 'r') as f:
-            return yaml.safe_load(f)
+            config = yaml.safe_load(f)
+        return self._expand_env_vars(config)
+
+    @staticmethod
+    def _expand_env_vars(obj):
+        """Recursively expand ${VAR} environment variable references in config values."""
+        if isinstance(obj, str):
+            return re.sub(
+                r'\$\{([^}]+)\}',
+                lambda m: os.environ.get(m.group(1), m.group(0)),
+                obj,
+            )
+        if isinstance(obj, dict):
+            return {k: TravelBotDaemon._expand_env_vars(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [TravelBotDaemon._expand_env_vars(item) for item in obj]
+        return obj
     
     def log_with_timestamp(self, message, level="INFO"):
         """Log message with timestamp and immediate flush."""

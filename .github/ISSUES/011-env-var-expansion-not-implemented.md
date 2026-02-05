@@ -2,8 +2,14 @@
 
 **Priority:** High
 **Category:** Correctness
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/daemon.py:73-76`, `docs/configuration.md:107-121`
+
+## Fix Applied
+- Added `_expand_env_vars()` static method to `TravelBotDaemon` that recursively walks the config dict and expands `${VAR}` patterns using `os.environ`
+- `load_config()` now calls `_expand_env_vars()` after `yaml.safe_load()` as a post-processing step
+- Unset environment variables are left as their literal `${VAR}` string (no silent failure)
+- Added 8 unit tests in `tests/test_config_env_vars.py` covering simple strings, nested dicts, lists, missing vars, and multiple vars in one string
 
 ## Problem
 
@@ -34,6 +40,6 @@ Either:
 
 ## Acceptance Criteria
 
-- [ ] Environment variable syntax works as documented, OR documentation is corrected
-- [ ] Users have a clear, working path to avoid storing secrets in plain text
-- [ ] A test validates the chosen approach
+- [x] Environment variable syntax works as documented, OR documentation is corrected
+- [x] Users have a clear, working path to avoid storing secrets in plain text
+- [x] A test validates the chosen approach
