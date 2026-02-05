@@ -63,7 +63,6 @@ email:
     max_connection_retries: 3   # Maximum connection retry attempts
 
   search:
-    keywords: ["itinerary", "confirmation", "travel", "booking"]  # Search terms
     max_pdf_size_mb: 10         # Maximum PDF attachment size to process
 ```
 
@@ -79,14 +78,10 @@ email:
 
 ```yaml
 processing:
-  download_folder: "attachments"      # Folder for PDF downloads
-  timezone: "America/New_York"        # System timezone for calendar events
   default_reply_to: "user@example.com"  # Default address for do-not-reply emails
 ```
 
 **Processing Options**:
-- `download_folder`: Relative or absolute path for PDF storage
-- `timezone`: System timezone (see [timezone list](#timezone-reference))
 - `default_reply_to`: Used when original sender is do-not-reply address
 
 ## 🔒 Security Configuration
@@ -117,48 +112,14 @@ chmod 600 travelbot/config.yaml    # Owner read/write only
 chmod 700 travelbot/               # Owner access only
 ```
 
-## 🌍 Timezone Reference
-
-Common timezone identifiers for the `processing.timezone` setting:
-
-### North America
-- `America/New_York` - Eastern Time
-- `America/Chicago` - Central Time  
-- `America/Denver` - Mountain Time
-- `America/Los_Angeles` - Pacific Time
-- `America/Toronto` - Eastern (Canada)
-- `America/Vancouver` - Pacific (Canada)
-
-### Europe
-- `Europe/London` - GMT/BST
-- `Europe/Paris` - CET/CEST
-- `Europe/Berlin` - CET/CEST
-- `Europe/Rome` - CET/CEST
-- `Europe/Madrid` - CET/CEST
-
-### Asia-Pacific
-- `Asia/Tokyo` - Japan Standard Time
-- `Asia/Shanghai` - China Standard Time
-- `Asia/Singapore` - Singapore Standard Time
-- `Australia/Sydney` - AEST/AEDT
-- `Pacific/Auckland` - NZST/NZDT
-
 ## ⚙️ Advanced Configuration
 
-### Custom Email Search
+### PDF Size Limit
 
 ```yaml
 email:
   search:
-    keywords:
-      - "itinerary"
-      - "confirmation"
-      - "booking"
-      - "reservation"
-      - "travel"
-      - "flight"
-      - "hotel"
-    max_pdf_size_mb: 10
+    max_pdf_size_mb: 10  # Maximum PDF attachment size in MB (default: 10)
 ```
 
 ## 🔍 Configuration Validation
@@ -241,7 +202,6 @@ email:
     password: "your-app-password"
 
 processing:
-  timezone: "America/New_York"
   default_reply_to: "your-personal-email@gmail.com"
 ```
 
@@ -270,12 +230,9 @@ email:
     username: "travelbot@company.com"
     password: "${TRAVELBOT_EMAIL_PASSWORD}"
   search:
-    keywords: ["itinerary", "confirmation", "travel", "booking", "reservation"]
     max_pdf_size_mb: 15
 
 processing:
-  download_folder: "/var/travelbot/attachments"
-  timezone: "America/New_York"
   default_reply_to: "travel-admin@company.com"
 ```
 
@@ -298,14 +255,7 @@ KeyError: 'api_key'
 - Check all required fields are present
 - Verify field names match exactly (case-sensitive)
 
-**3. Invalid Timezone**
-```
-ValueError: Invalid timezone: America/New_York_Invalid
-```
-- Use valid timezone identifiers from the reference above
-- Check spelling and capitalization
-
-**4. Connection Timeouts**
+**3. Connection Timeouts**
 ```
 TimeoutError: Connection timed out
 ```

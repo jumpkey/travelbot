@@ -34,13 +34,10 @@ email:
 
   # Search criteria for travel emails
   search:
-    keywords: ["itinerary", "confirmation", "travel", "booking"]
     max_pdf_size_mb: 10
 
 # Processing settings
 processing:
-  download_folder: "attachments"
-  timezone: "America/New_York"  # System timezone for calendar events
   # Default reply address for do-not-reply emails (airline systems, etc.)
   default_reply_to: "user@yourdomain.com"
 

@@ -331,10 +331,10 @@ class EmailClient:
             return False
 
     def mark_emails_as_seen(self, email_uids):
-        return self._store_flags(email_uids, '+FLAGS', '(\Seen)')
+        return self._store_flags(email_uids, '+FLAGS', r'(\Seen)')
 
     def mark_emails_as_unseen(self, email_uids):
-        return self._store_flags(email_uids, '-FLAGS', '(\Seen)')
+        return self._store_flags(email_uids, '-FLAGS', r'(\Seen)')
 
     def check_idle_support(self):
         """Check if server supports IDLE extension."""

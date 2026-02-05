@@ -62,6 +62,7 @@ travelbot/
 │   ├── __init__.py         # Package initialization
 │   ├── daemon.py           # Main processing daemon
 │   ├── email_client.py     # Email handling (IMAP)
+│   ├── auto_reply_filter.py # Auto-reply/bounce detection (RFC 3834)
 │   ├── pdf_processor.py    # PDF text extraction
 │   └── config.yaml         # Configuration file
 ├── scripts/                # Startup and utility scripts

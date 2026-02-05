@@ -7,6 +7,8 @@ This module provides heuristic-based detection of auto-generated emails
 RFC 3834 defines standard headers for automatic responses.
 """
 
+import time
+
 from email.message import Message
 from email.utils import parseaddr
 from typing import Tuple, Optional, Dict, Any
@@ -129,7 +131,6 @@ class ReplyRateLimiter:
             window_seconds: Time window in seconds (default 1 hour)
             now_func: Optional function returning current time (for testing)
         """
-        import time
         self.max_replies = max_replies
         self.window_seconds = window_seconds
         self.now_func = now_func or time.time

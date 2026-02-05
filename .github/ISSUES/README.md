@@ -50,6 +50,9 @@ This directory contains documented issues and improvement opportunities for the 
 | [025](025-limited-test-coverage.md) | Test coverage limited to single module | `tests/` | Open |
 | [026](026-rate-limiter-state-lost-on-restart.md) | In-memory rate limiter state lost on restart | `auto_reply_filter.py:160-224` | Fixed |
 | [027](027-idle-config-values-not-read.md) | IDLE config values never read from config | `config.yaml.example:34-36`, `daemon.py` | Fixed |
+| [028](028-escape-sequence-deprecation-warnings.md) | Invalid escape sequence DeprecationWarnings | `email_client.py:334,337` | Fixed |
+| [029](029-additional-unimplemented-config-options.md) | More unimplemented config options (timezone, download_folder, keywords) | `docs/configuration.md`, `config.yaml.example` | Fixed |
+| [030](030-minor-doc-inconsistencies.md) | Minor doc inconsistencies (README structure, api.md example) | `README.md`, `docs/api.md` | Fixed |
 
 ## Workflow
 

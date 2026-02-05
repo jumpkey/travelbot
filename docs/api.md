@@ -11,7 +11,7 @@ Main processing daemon class that handles email monitoring and travel processing
 ```python
 from travelbot.daemon import TravelBotDaemon
 
-daemon = TravelBotDaemon(config_path="config.yaml", poll_interval=30, retain_files=False)
+daemon = TravelBotDaemon(config_path="config.yaml", poll_interval=30, retain_files=False, verbose=False)
 daemon.run_main_loop()  # Automatically chooses IDLE or polling mode
 ```
 
