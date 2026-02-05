@@ -31,13 +31,13 @@ This directory contains documented issues and improvement opportunities for the 
 | [007](007-only-first-pdf-processed.md) | Only first PDF attachment processed | `EmailClient.download_pdf_attachments` | Fixed (PR #14) |
 | [008](008-email-body-duplicated.md) | Email body duplicated from plain+HTML | `EmailClient.extract_email_body` | Fixed (PR #14) |
 | [009](009-rfc2047-headers-not-decoded.md) | RFC2047 headers not decoded | `EmailClient._decode_email_header` | Fixed (PR #14) |
-| [014](014-api-docs-reference-pypdf2-not-pdfplumber.md) | API docs reference PyPDF2 instead of pdfplumber | `docs/api.md:371` | Open |
-| [015](015-pop3-documented-but-not-implemented.md) | POP3 support documented but not implemented | `config.yaml.example`, `docs/`, `README.md` | Open |
-| [016](016-init-missing-travelbot-daemon-export.md) | \_\_init\_\_.py doesn't export TravelBotDaemon | `travelbot/__init__.py:16-31` | Open |
-| [017](017-documented-config-options-not-implemented.md) | Documented config options have no implementation | `docs/configuration.md:156-202` | Open |
-| [018](018-api-docs-outdated-signatures-and-fields.md) | API docs have outdated signatures and data structures | `docs/api.md` (multiple locations) | Open |
-| [019](019-bare-except-clauses.md) | Bare except clauses suppress all exceptions | `daemon.py:218`, `email_client.py:209` | Open |
-| [020](020-pdfplumber-exception-path-may-not-exist.md) | pdfplumber exception class path may not exist | `pdf_processor.py:39` | Open |
+| [014](014-api-docs-reference-pypdf2-not-pdfplumber.md) | API docs reference PyPDF2 instead of pdfplumber | `docs/api.md:371` | Fixed |
+| [015](015-pop3-documented-but-not-implemented.md) | POP3 support documented but not implemented | `config.yaml.example`, `docs/`, `README.md` | Fixed |
+| [016](016-init-missing-travelbot-daemon-export.md) | \_\_init\_\_.py doesn't export TravelBotDaemon | `travelbot/__init__.py:16-31` | Fixed |
+| [017](017-documented-config-options-not-implemented.md) | Documented config options have no implementation | `docs/configuration.md:156-202` | Fixed |
+| [018](018-api-docs-outdated-signatures-and-fields.md) | API docs have outdated signatures and data structures | `docs/api.md` (multiple locations) | Fixed |
+| [019](019-bare-except-clauses.md) | Bare except clauses suppress all exceptions | `daemon.py:218`, `email_client.py:209` | Fixed |
+| [020](020-pdfplumber-exception-path-may-not-exist.md) | pdfplumber exception class path may not exist | `pdf_processor.py:39` | Fixed |
 
 ### Low (Code Quality/Enhancement)
 

@@ -20,6 +20,7 @@ daemon.run_main_loop()  # Automatically chooses IDLE or polling mode
 - **config_path** (str): Path to configuration file (default: "config.yaml")
 - **poll_interval** (int): Email polling interval in seconds (default: 30)
 - **retain_files** (bool): Retain work files after processing for debugging (default: False)
+- **verbose** (bool): Enable verbose logging for IDLE monitoring (default: False)
 
 #### Methods
 
@@ -105,13 +106,14 @@ Sets up dedicated IDLE connection with IMAPClient.
 
 **Returns**: `IMAPClient` - IDLE client connection
 
-##### `start_idle_monitoring(idle_client, callback, timeout=1740)`
+##### `start_idle_monitoring(idle_client, callback, timeout=1740, verbose=False)`
 Starts IDLE monitoring with callback for new messages.
 
 **Parameters**:
 - `idle_client` (IMAPClient): IDLE connection client
 - `callback` (callable): Function to call on new messages
 - `timeout` (int): IDLE timeout in seconds (default: 1740)
+- `verbose` (bool): Enable verbose IDLE logging (default: False)
 
 **Returns**: `threading.Thread` - IDLE monitoring thread
 
@@ -200,7 +202,6 @@ Configuration loaded from `config.yaml`:
         'password': 'password'
     },
     'email': {
-        'client_type': 'imap',
         'imap': {
             'host': 'imap.example.com',
             'port': 993,
@@ -495,11 +496,14 @@ parser.add_argument('--poll-interval', type=int, default=30,
                    help='Email polling interval in seconds (default: 30)')
 parser.add_argument('--retain-files', action='store_true',
                    help='Retain work files after processing for debugging')
+parser.add_argument('--verbose', action='store_true',
+                   help='Enable verbose logging for IDLE monitoring')
 
 args = parser.parse_args()
 daemon = TravelBotDaemon(
     poll_interval=args.poll_interval,
-    retain_files=args.retain_files
+    retain_files=args.retain_files,
+    verbose=args.verbose
 )
 ```
 

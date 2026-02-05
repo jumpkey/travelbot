@@ -1,6 +1,11 @@
 import pdfplumber
 import os
 
+try:
+    _PdfminerException = pdfplumber.utils.exceptions.PdfminerException
+except AttributeError:
+    _PdfminerException = Exception
+
 def extract_text_from_pdf(pdf_filepath):
     """
     Extracts all text from a given PDF file using pdfplumber.
@@ -36,7 +41,7 @@ def extract_text_from_pdf(pdf_filepath):
             print(f"Successfully extracted text from '{os.path.basename(pdf_filepath)}'. Total length: {text_length} chars.")
             return concatenated_text
             
-    except pdfplumber.utils.exceptions.PdfminerException as e_pdf_related: # Catching PdfminerException
+    except _PdfminerException as e_pdf_related:
         print(f"Error: PDF processing error in '{pdf_filepath}': {e_pdf_related}")
         return ""
     except Exception as e:

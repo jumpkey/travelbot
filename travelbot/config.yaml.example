@@ -19,9 +19,6 @@ smtp:
 
 # Email Processing Configuration
 email:
-  # Email client type - "imap" or "pop3"
-  client_type: "imap"
-  
   # IMAP settings for reading emails
   imap:
     host: "imap.example.com"    # Your IMAP server
@@ -34,14 +31,7 @@ email:
     idle_fallback_polling: 30      # Fallback polling interval if IDLE fails
     connection_retry_delay: 5      # Delay between connection retries
     max_connection_retries: 3      # Maximum connection retry attempts
-  
-  # POP3 settings for reading emails (alternative to IMAP)
-  pop3:
-    host: "pop.example.com"     # Your POP3 server
-    port: 995                   # SSL port (995) or plain port (110)
-    username: "travelbot@yourdomain.com"  # Your email account
-    password: "your-pop3-password"        # Your email password
-  
+
   # Search criteria for travel emails
   search:
     keywords: ["itinerary", "confirmation", "travel", "booking"]

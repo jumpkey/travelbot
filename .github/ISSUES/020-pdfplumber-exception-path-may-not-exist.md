@@ -2,8 +2,13 @@
 
 **Priority:** Medium
 **Category:** Correctness
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/pdf_processor.py:39`
+
+## Fix Applied
+- Added module-level try/except that resolves `_PdfminerException` at import time
+- If `pdfplumber.utils.exceptions.PdfminerException` exists, it is used; otherwise falls back to `Exception`
+- The except handler now catches `_PdfminerException` instead of the hard-coded path
 
 ## Problem
 
@@ -37,6 +42,6 @@ The exception class path was written for a specific version of pdfplumber and ma
 
 ## Acceptance Criteria
 
-- [ ] PDF-specific exceptions are caught reliably across pdfplumber versions
-- [ ] No `AttributeError` when running with different pdfplumber versions
-- [ ] Error messages still distinguish between PDF errors and other errors
+- [x] PDF-specific exceptions are caught reliably across pdfplumber versions
+- [x] No `AttributeError` when running with different pdfplumber versions
+- [x] Error messages still distinguish between PDF errors and other errors

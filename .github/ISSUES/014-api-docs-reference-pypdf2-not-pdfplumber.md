@@ -2,8 +2,12 @@
 
 **Priority:** Medium
 **Category:** Documentation
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `docs/api.md:371`
+
+## Fix Applied
+- Replaced `import PyPDF2` with `import pdfplumber` in the External Dependencies section of `docs/api.md`
+- This was included in the Issue 013 fix batch
 
 ## Problem
 
@@ -31,5 +35,5 @@ Replace `import PyPDF2  # PDF text extraction` with `import pdfplumber  # PDF te
 
 ## Acceptance Criteria
 
-- [ ] API docs reference `pdfplumber`, not `PyPDF2`
-- [ ] All dependency references in docs match `requirements.txt`
+- [x] API docs reference `pdfplumber`, not `PyPDF2`
+- [x] All dependency references in docs match `requirements.txt`

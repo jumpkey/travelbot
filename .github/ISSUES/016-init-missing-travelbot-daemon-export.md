@@ -2,8 +2,13 @@
 
 **Priority:** Medium
 **Category:** Correctness
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/__init__.py:16-31`
+
+## Fix Applied
+- Added `from .daemon import TravelBotDaemon` to `__init__.py`
+- Added `'TravelBotDaemon'` to `__all__` (now first entry, matching docstring prominence)
+- `from travelbot import TravelBotDaemon` now works as documented
 
 ## Problem
 
@@ -38,6 +43,6 @@ __all__ = ['TravelBotDaemon', 'EmailClient', 'extract_text_from_pdf']
 
 ## Acceptance Criteria
 
-- [ ] `from travelbot import TravelBotDaemon` works
-- [ ] `__all__` includes `TravelBotDaemon`
-- [ ] Docstring usage example is valid
+- [x] `from travelbot import TravelBotDaemon` works
+- [x] `__all__` includes `TravelBotDaemon`
+- [x] Docstring usage example is valid

@@ -231,7 +231,7 @@ class TravelBotDaemon:
         if self.idle_client:
             try:
                 self.email_client.idle_cleanup(self.idle_client)
-            except:
+            except Exception:
                 pass
             self.idle_client = None
             

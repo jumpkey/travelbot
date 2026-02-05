@@ -2,8 +2,16 @@
 
 **Priority:** Medium
 **Category:** Documentation
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/config.yaml.example:38-44`, `docs/configuration.md:67-70`, `README.md:64`
+
+## Fix Applied
+- Removed `pop3:` configuration section from `config.yaml.example`
+- Removed `client_type` setting from `config.yaml.example` (only IMAP is supported)
+- Removed POP3 section and `client_type` references from `docs/configuration.md`
+- Updated email client notes to state IMAP-only support
+- Changed README project structure from "IMAP/POP3" to "IMAP"
+- Removed `client_type` from Configuration Structure in `docs/api.md`
 
 ## Problem
 
@@ -33,6 +41,6 @@ Either:
 
 ## Acceptance Criteria
 
-- [ ] Documentation accurately reflects supported protocols
-- [ ] No configuration options reference unimplemented features
-- [ ] README project structure description is accurate
+- [x] Documentation accurately reflects supported protocols
+- [x] No configuration options reference unimplemented features
+- [x] README project structure description is accurate

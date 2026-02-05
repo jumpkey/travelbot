@@ -2,8 +2,13 @@
 
 **Priority:** Medium
 **Category:** Correctness
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `travelbot/daemon.py:218`, `travelbot/email_client.py:209`
+
+## Fix Applied
+- Replaced `except:` with `except Exception:` in `daemon.py` (`fallback_to_polling`)
+- Replaced `except:` with `except Exception:` in `email_client.py` (`_reconnect`)
+- `KeyboardInterrupt` and `SystemExit` now propagate correctly through cleanup paths
 
 ## Problem
 
@@ -47,6 +52,6 @@ except Exception:
 
 ## Acceptance Criteria
 
-- [ ] No bare `except:` clauses remain in the codebase
-- [ ] All exception handlers specify at least `Exception`
-- [ ] Daemon can still be interrupted with Ctrl+C during cleanup
+- [x] No bare `except:` clauses remain in the codebase
+- [x] All exception handlers specify at least `Exception`
+- [x] Daemon can still be interrupted with Ctrl+C during cleanup

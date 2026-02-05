@@ -206,7 +206,7 @@ class EmailClient:
                     try:
                         self.mail.close()
                         self.mail.logout()
-                    except:
+                    except Exception:
                         pass
                     self.mail = None
                 

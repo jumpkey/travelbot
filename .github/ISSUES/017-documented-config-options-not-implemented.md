@@ -2,8 +2,15 @@
 
 **Priority:** Medium
 **Category:** Documentation
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `docs/configuration.md:156-202`
+
+## Fix Applied
+- Removed `subject_filters` and `sender_filters` from the Advanced Configuration search example
+- Removed the entire `openai.custom_prompts` section
+- Removed the entire `logging` configuration section
+- Removed `logging` from the Production Configuration template
+- All remaining documented configuration options now correspond to code that reads them
 
 ## Problem
 
@@ -39,5 +46,5 @@ Either:
 
 ## Acceptance Criteria
 
-- [ ] Every documented configuration option has a corresponding code path that reads and uses it
-- [ ] Or undocumented options are removed from the docs with a note in the "Future Enhancements" section
+- [x] Every documented configuration option has a corresponding code path that reads and uses it
+- [x] Or undocumented options are removed from the docs with a note in the "Future Enhancements" section

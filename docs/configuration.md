@@ -50,8 +50,6 @@ smtp:
 
 ```yaml
 email:
-  client_type: "imap"           # Email client type: "imap" or "pop3"
-  
   imap:
     host: "imap.example.com"    # IMAP server hostname
     port: 993                   # IMAP port (993 for SSL, 143 for STARTTLS)
@@ -63,22 +61,14 @@ email:
     idle_fallback_polling: 30   # Fallback polling interval if IDLE fails
     connection_retry_delay: 5   # Delay between connection retries
     max_connection_retries: 3   # Maximum connection retry attempts
-  
-  pop3:
-    host: "pop.example.com"     # POP3 server hostname (alternative to IMAP)
-    port: 995                   # POP3 port (995 for SSL, 110 for plain)
-    username: "account@example.com"  # Email account username
-    password: "your-password"   # Email account password
-    
+
   search:
     keywords: ["itinerary", "confirmation", "travel", "booking"]  # Search terms
     max_pdf_size_mb: 10         # Maximum PDF attachment size to process
 ```
 
 **Email Client Notes**:
-- **IMAP** (recommended): Supports server-side email management
-- **POP3**: Downloads emails locally, less feature-rich
-- Only one client type is used based on `client_type` setting
+- TravelBot uses IMAP for email access, with support for IMAP IDLE for real-time processing
 
 **Common Email Settings**:
 - **Gmail**: `imap.gmail.com:993` / `smtp.gmail.com:587`
@@ -160,45 +150,15 @@ Common timezone identifiers for the `processing.timezone` setting:
 ```yaml
 email:
   search:
-    keywords: 
+    keywords:
       - "itinerary"
-      - "confirmation" 
+      - "confirmation"
       - "booking"
       - "reservation"
       - "travel"
       - "flight"
       - "hotel"
     max_pdf_size_mb: 10
-    subject_filters:              # Optional: filter by subject patterns
-      - "*itinerary*"
-      - "*booking*"
-    sender_filters:               # Optional: filter by sender domains
-      - "airlines.com"
-      - "hotels.com"
-      - "travel.com"
-```
-
-### LLM Prompt Customization
-
-```yaml
-openai:
-  # ... other settings ...
-  custom_prompts:
-    system_message: "You are a professional travel assistant..."
-    max_tokens: 8000
-    temperature: 0
-    timeout_seconds: 30
-```
-
-### Logging Configuration
-
-```yaml
-logging:
-  level: "INFO"                   # DEBUG, INFO, WARN, ERROR
-  format: "detailed"              # "simple", "detailed", "json"
-  file_rotation:
-    max_size_mb: 100
-    backup_count: 5
 ```
 
 ## 🔍 Configuration Validation
@@ -274,7 +234,6 @@ smtp:
   password: "your-app-password"
 
 email:
-  client_type: "imap"
   imap:
     host: "imap.gmail.com"
     port: 993
@@ -305,7 +264,6 @@ smtp:
   password: "${TRAVELBOT_EMAIL_PASSWORD}"
 
 email:
-  client_type: "imap"
   imap:
     host: "imap.company.com"
     port: 993
@@ -319,10 +277,6 @@ processing:
   download_folder: "/var/travelbot/attachments"
   timezone: "America/New_York"
   default_reply_to: "travel-admin@company.com"
-
-logging:
-  level: "INFO"
-  format: "detailed"
 ```
 
 ## 🚨 Troubleshooting Configuration

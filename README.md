@@ -61,7 +61,7 @@ travelbot/
 ├── travelbot/              # Core package
 │   ├── __init__.py         # Package initialization
 │   ├── daemon.py           # Main processing daemon
-│   ├── email_client.py     # Email handling (IMAP/POP3)
+│   ├── email_client.py     # Email handling (IMAP)
 │   ├── pdf_processor.py    # PDF text extraction
 │   └── config.yaml         # Configuration file
 ├── scripts/                # Startup and utility scripts

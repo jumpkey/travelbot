@@ -2,8 +2,14 @@
 
 **Priority:** Medium
 **Category:** Documentation
-**Status:** Open
+**Status:** Fixed (branch `claude/review-code-docs-GEwGy`)
 **Location:** `docs/api.md:20-22, 114, 134-168, 232-237`
+
+## Fix Applied
+- Added `verbose` parameter to TravelBotDaemon constructor docs
+- Added `verbose` parameter to `start_idle_monitoring` docs
+- Items 3-5 (get_complete_email_content, Email Content Dict, LLM Response) were already fixed in the Issue 013 batch
+- Added `--verbose` to argument parsing example in CLI section
 
 ## Problem
 
@@ -45,6 +51,6 @@ Update all method signatures and data structures in `docs/api.md` to match the c
 
 ## Acceptance Criteria
 
-- [ ] All method signatures in docs match actual code
-- [ ] All data structure fields in docs match actual code
-- [ ] New parameters have descriptions and default values documented
+- [x] All method signatures in docs match actual code
+- [x] All data structure fields in docs match actual code
+- [x] New parameters have descriptions and default values documented
