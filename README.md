@@ -1,4 +1,4 @@
-# TravelBot v1.0 - Professional Travel Email Processing System
+# TravelBot v1.2 - Professional Travel Email Processing System
 
 🤖 **AI-powered travel itinerary processing with timezone intelligence**
 
